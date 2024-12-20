@@ -1,0 +1,52 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6f9; /* Light background */
+    color: #333; /* Dark text */
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 0;
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  h2, h3, h1 {
+    color: #333;
+    margin-bottom: 16px;
+  }
+  
+  button {
+    font-family: 'Roboto', sans-serif;
+    padding: 10px 20px;
+    border: none;
+    background-color: #ff7a00; /* Bright orange */
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #e66a00; /* Darker shade of orange */
+  }
+  
+  .container {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  

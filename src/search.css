@@ -1,0 +1,93 @@
+/* search.css */
+
+.search-screen {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-screen h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .search-screen p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+  }
+  
+  .csv-upload {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  
+  .csv-upload h3 {
+    color: #444;
+    margin-bottom: 10px;
+  }
+  
+  .csv-upload input[type="file"] {
+    margin-top: 10px;
+    padding: 5px;
+  }
+  
+  .upload-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .upload-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .upload-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .csv-upload div {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  
+  .search-bar {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .search-bar input {
+    padding: 10px;
+    width: 70%;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  .search-bar button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search-bar button:hover {
+    background-color: #218838;
+  }
+  

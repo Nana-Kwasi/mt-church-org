@@ -1,0 +1,154 @@
+/* Modal overlay */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay for better focus */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal content */
+  .custom-modal-content {
+    background-color: #f9f9f9; /* Light background for elegance */
+    border-radius: 12px; /* Softer corners */
+    padding: 25px 30px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Deeper shadow for modern look */
+    border: 1px solid #e0e0e0; /* Subtle border for a defined structure */
+    font-family: "Arial", sans-serif;
+  }
+  
+  /* Modal header */
+  .custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #007bff; /* Vibrant line for separation */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .custom-modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #007bff; /* Primary color for the title */
+  }
+  
+  .custom-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #333; /* Neutral color for close button */
+    transition: color 0.3s ease;
+  }
+  
+  .custom-modal-close:hover {
+    color: #007bff; /* Matches the header line for consistency */
+  }
+  
+  /* Form styling inside the modal */
+  .custom-modal-form label {
+    display: block;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #555; /* Soft dark for labels */
+    margin: 10px 0 5px;
+  }
+  
+  .custom-modal-form input,
+  .custom-modal-form select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc; /* Clean input border */
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    color: #333;
+    background-color: #fdfdfd; /* Light background for inputs */
+  }
+  
+  .custom-modal-form input:focus,
+  .custom-modal-form select:focus {
+    border-color: #007bff; /* Highlight input on focus */
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  /* Button styles */
+  .custom-modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; /* Spaced-out buttons */
+    margin-top: 20px;
+  }
+  
+  .custom-modal-buttons button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px; /* Rounded buttons */
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  /* Save button */
+  .custom-modal-buttons .save-button {
+    background-color: #28a745; /* Deep green for save */
+    color: white;
+  }
+  
+  .custom-modal-buttons .save-button:hover {
+    background-color: #218838;
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.4);
+  }
+  
+  /* Delete button */
+  .custom-modal-buttons .delete-button {
+    background-color: #dc3545; /* Deep red for delete */
+    color: white;
+  }
+  
+  .custom-modal-buttons .delete-button:hover {
+    background-color: #c82333;
+    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4);
+  }
+  
+  /* Cancel button */
+  .custom-modal-buttons .cancel-button {
+    background-color: #6c757d; /* Neutral gray for cancel */
+    color: white;
+  }
+  
+  .custom-modal-buttons .cancel-button:hover {
+    background-color: #5a6268;
+    box-shadow: 0 3px 8px rgba(108, 117, 125, 0.4);
+  }
+  
+  /* Modal form groups */
+  .custom-modal-form .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .custom-modal-form .form-group label {
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  
+  .custom-modal-form .form-group input,
+  .custom-modal-form .form-group select {
+    width: calc(100% - 24px);
+    padding: 12px;
+  }
+  

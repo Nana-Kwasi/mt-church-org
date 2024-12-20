@@ -1,0 +1,185 @@
+.member-details {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f6f8fa;
+}
+
+.member-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.member-details-table th, 
+.member-details-table td {
+    border: 1px solid #e6e9ee;
+    padding: 1rem;
+    text-align: left;
+    line-height: 1.6;
+}
+
+.member-details-table th {
+    background-color: #f1f4f8;
+    color: #2c3e50;
+    font-weight: 600;
+    width: 30%;
+}
+
+.member-details-table td {
+    color: #4a4a4a;
+}
+
+.member-details-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.member-details-table tr:hover {
+    background-color: #f0f0f0;
+    transition: background-color 0.3s ease;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(to right, #2575fc 0%, #6a11cb 100%);
+}
+
+@media screen and (max-width: 768px) {
+    .member-details-table {
+        font-size: 0.9rem;
+    }
+
+    .member-details-table th, 
+    .member-details-table td {
+        padding: 0.75rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.row-container {
+    display: flex;
+    align-items: center; /* Vertically center items */
+    justify-content: space-between; /* Space evenly between components */
+    padding: 10px; /* Add some spacing */
+    gap: 20px; /* Add spacing between components */
+  }
+  
+  .dashboard-title {
+    color: gray;
+    font-size: 40px;
+    margin: 0; /* Reset default margin */
+    text-align: center;
+    flex-grow: 1; /* Allows the title to take up available space */
+  }
+  
+.member-details-table {
+    animation: fadeIn 0.6s ease forwards;
+}
+.pay-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .pay-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+  }
+  
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+  }
+  
+  .modal-content select,
+  .modal-content input {
+    width: 90%;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .modal-pay-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+  
+  .modal-pay-button:hover {
+    background-color: #218838;
+  }
+  
+  .modal-close-button {
+    background: transparent;
+    color: #dc3545;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
