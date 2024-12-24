@@ -9,11 +9,46 @@ const Registration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Predefined options
+  const TITLES = [
+    "Mr.",
+    "Mrs.",
+    "Miss",
+    "Dr.",
+    "Rev.",
+    "Prof."
+  ];
+
+  const EMPLOYMENT_STATUSES = [
+    "Employed",
+    "Self-Employed",
+    "Unemployed",
+    "Student",
+    "Retired"
+  ];
+
+  const GHANA_REGIONS = [
+    "Ahafo Region",
+    "Ashanti Region",
+    "Bono East Region",
+    "Bono Region",
+    "Central Region",
+    "Eastern Region",
+    "Greater Accra Region",
+    "North East Region",
+    "Northern Region",
+    "Oti Region",
+    "Savannah Region",
+    "Upper East Region",
+    "Upper West Region",
+    "Volta Region",
+    "Western North Region",
+    "Western Region"
+  ];
+
   const ORGANISATIONS = [
     "Mens Fellowship",
     "Choir",
-    "Womens Christ Little Band", 
+    "Christ Little Band", 
     "Singing Band", 
     "Guild",
     "Girls Fellowship", 
@@ -28,12 +63,18 @@ const Registration = () => {
     "Organisation Executive",
     "Assistant Class Leader",
     "Poor Fund Steward",
-    "Lay Movement Executive"
+    "Lay Movement Executive",
+    "Church Member",
+    "Care Taker",
+    "Steward",
+    "Chapel Steward"
   ];
 
   const MEMBERSHIP_TYPES = [
     "Catechumens",
-    "Full Member"
+    "Full Member",
+    "Distance",
+    "Invalid"
   ];
 
   const CLASS_OPTIONS = [
@@ -45,11 +86,19 @@ const Registration = () => {
   ];
 
   const CLASS_LEADERS = [
-    "Samuel Dadzie",
     "Naomi Eshun",
     "De-Graft Yamoah", 
-    "J A Mensah",
-    "Ben Appiah-Mends"
+    "Stephen Boadi",
+    "Joel Yamoah",
+    "Victoria Mensah",
+  ];
+
+  const ASSISTANT_CLASS_LEADERS = [
+    "Esther Klottey",
+    "Anabella Yamoah",
+    "Mercy Arhur",
+    "Beatrice Arhin",
+    "Ebenezer Saah"
   ];
 
   const [formData, setFormData] = useState({
@@ -70,23 +119,47 @@ const Registration = () => {
     membership: '',
     class: '',
     role: '',
-    organisations: '',
+    organisations: [],
     assignClass: '',
-    assignClassLeader: ''
+    assignClassLeader: '',
+    assignAssistantClassLeader: ''
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
 
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    if (type === 'checkbox') {
+      const updatedOrganisations = [...formData.organisations];
+      if (e.target.checked) {
+        updatedOrganisations.push(value);
+      } else {
+        const index = updatedOrganisations.indexOf(value);
+        if (index > -1) {
+          updatedOrganisations.splice(index, 1);
+        }
+      }
+      setFormData({
+        ...formData,
+        organisations: updatedOrganisations
+      });
+    } else {
+      if (name === 'assignClassLeader') {
+        setFormData({
+          ...formData,
+          [name]: value,
+          assignAssistantClassLeader: ''
+        });
+      } else {
+        setFormData({
+          ...formData,
+          [name]: value
+        });
+      }
 
-    // Calculate age if DOB is updated
-    if (name === 'dob') {
-      const age = calculateAge(value);
-      setFormData((prevData) => ({ ...prevData, age }));
+      if (name === 'dob') {
+        const age = calculateAge(value);
+        setFormData((prevData) => ({ ...prevData, age }));
+      }
     }
   };
 
@@ -107,7 +180,6 @@ const Registration = () => {
     setError('');
 
     try {
-      // Validate required fields
       const requiredFields = [
         'firstName', 'lastName', 'gender',
         'contact', 'dob', 'age', 'maritalStatus'
@@ -121,7 +193,6 @@ const Registration = () => {
         return;
       }
 
-      // Check if member with the same contact already exists
       const membersQuery = query(
         collection(db, "Members"),
         where("contact", "==", formData.contact)
@@ -134,19 +205,14 @@ const Registration = () => {
         return;
       }
 
-      // Generate a UUID for the document ID
       const documentId = uuidv4();
-
-      // Prepare data for Firestore
       const submissionData = {
         ...formData,
         registrationDate: new Date().toISOString()
       };
 
-      // Submit to Firestore using UUID as document ID
       await setDoc(doc(db, "Members", documentId), submissionData);
 
-      // Reset form and show success message
       alert('Member registered successfully!');
       setFormData({
         title: '',
@@ -166,9 +232,10 @@ const Registration = () => {
         membership: '',
         class: '',
         role: '',
-        organisations: '',
+        organisations: [],
         assignClass: '',
-        assignClassLeader: ''
+        assignClassLeader: '',
+        assignAssistantClassLeader: ''
       });
     } catch (error) {
       console.error("Error submitting member data:", error);
@@ -182,10 +249,14 @@ const Registration = () => {
     <div className="registration-screen">
       <h2>Member Registration</h2>
       <form className="registration-form" onSubmit={handleSubmit}>
-        {/* Previous form fields remain the same */}
         <div className="form-group">
           <label>Title:</label>
-          <input type="text" name="title" value={formData.title} onChange={handleChange} />
+          <select name="title" value={formData.title} onChange={handleChange}>
+            <option value="">Select Title</option>
+            {TITLES.map(title => (
+              <option key={title} value={title}>{title}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
@@ -245,7 +316,12 @@ const Registration = () => {
 
         <div className="form-group">
           <label>Employment Status:</label>
-          <input type="text" name="employmentStatus" value={formData.employmentStatus} onChange={handleChange} />
+          <select name="employmentStatus" value={formData.employmentStatus} onChange={handleChange}>
+            <option value="">Select Employment Status</option>
+            {EMPLOYMENT_STATUSES.map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
@@ -255,7 +331,12 @@ const Registration = () => {
 
         <div className="form-group">
           <label>Home Region:</label>
-          <input type="text" name="homeRegion" value={formData.homeRegion} onChange={handleChange} />
+          <select name="homeRegion" value={formData.homeRegion} onChange={handleChange}>
+            <option value="">Select Region</option>
+            {GHANA_REGIONS.map(region => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
@@ -306,16 +387,21 @@ const Registration = () => {
 
         <div className="form-group">
           <label>Organisations:</label>
-          <select 
-            name="organisations" 
-            value={formData.organisations} 
-            onChange={handleChange}
-          >
-            <option value="">Select Organisation</option>
+          <div className="checkbox-group">
             {ORGANISATIONS.map(org => (
-              <option key={org} value={org}>{org}</option>
+              <div key={org} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  id={org}
+                  name="organisations"
+                  value={org}
+                  checked={formData.organisations.includes(org)}
+                  onChange={handleChange}
+                />
+                <label htmlFor={org}>{org}</label>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="form-group">
@@ -344,6 +430,22 @@ const Registration = () => {
               {CLASS_LEADERS.map(leader => (
                 <option key={leader} value={leader}>{leader}</option>
               ))}
+            </select>
+          </div>
+        )}
+
+        {formData.assignClassLeader && (
+          <div className="form-group">
+            <label>Assign Assistant Class Leader:</label>
+            <select
+              name="assignAssistantClassLeader"
+              value={formData.assignAssistantClassLeader}
+              onChange={handleChange}
+            >
+              <option value="">Select Assistant Class Leader</option>
+              {ASSISTANT_CLASS_LEADERS.map(assistant => (
+  <option key={assistant} value={assistant}>{assistant}</option>
+))}
             </select>
           </div>
         )}

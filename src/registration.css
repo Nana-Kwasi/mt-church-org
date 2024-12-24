@@ -35,7 +35,17 @@
     border: 1px solid #ccc;
     border-radius: 5px;
   }
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
   
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
   select {
     width: 100%;
     padding: 10px;

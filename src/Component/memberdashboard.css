@@ -5,7 +5,7 @@
     /* border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); */
     /* padding: 1.5rem; */
-    margin-left: -15%; /* Shift entire dashboard to the left */
+    margin-left: -20%; /* Shift entire dashboard to the left */
 
   }
   
@@ -14,6 +14,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    
    
   }
   
@@ -29,6 +30,7 @@
     justify-content: center;
     align-items: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
   }
   
   .summary-metric:hover {
@@ -37,8 +39,8 @@
   }
   
   .summary-metric-circle {
-    width: 12rem;
-    height: 12rem;
+    width: 11rem;
+    height: 11rem;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -46,6 +48,8 @@
     align-items: center;
     color: white;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+   
+   
   }
   
   .summary-metric-circle .amount {
@@ -57,6 +61,7 @@
   .summary-metric-circle .label {
     font-size: 0.875rem;
     opacity: 0.9;
+   
   }
   
   /* Pie Chart Styling */
@@ -64,6 +69,7 @@
     /* background-color: white; */
     /* border-radius: 12px; */
     padding: 1.5rem;
+ 
     /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); */
   }
   
@@ -76,19 +82,22 @@
   }
   
   /* Transaction Table Styling */
+  .transaction-table-container {
+    max-height: 400px;
+    padding-left: 200px; /* Use padding-left instead of margin-left */
+    width: 95%;
+}
+
 .transaction-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     background-color: white;
     border-radius: 12px;
-    overflow: hidden;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
     margin-top: 20px;
-    
-
-  }
-  
+}
+  /* Rest of the styles remain unchanged */
   .transaction-table thead {
     background: linear-gradient(to right, #f1f5f9, #e2e8f0);
     position: sticky;
@@ -109,14 +118,11 @@
     text-transform: uppercase;
     font-size: 0.875rem;
     letter-spacing: 0.5px;
-    
   }
   
   .transaction-table tbody tr {
     border-bottom: 1px solid #f0f4f8;
     transition: all 0.3s ease;
-    
-
   }
   
   .transaction-table tbody tr:hover {
@@ -173,6 +179,11 @@
   
   /* Responsive Adjustments */
   @media (max-width: 768px) {
+    .transaction-table-container {
+      margin-right: 1rem;
+      width: 100%;
+    }
+  
     .transaction-table {
       font-size: 0.875rem;
     }
@@ -182,26 +193,6 @@
       padding: 0.5rem;
     }
   }
-  
-  /* Scrollbar Styling for Overflow */
-  .transaction-table-container {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  
-  .transaction-table-container::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .transaction-table-container::-webkit-scrollbar-track {
-    background: #f1f5f9;
-  }
-  
-  .transaction-table-container::-webkit-scrollbar-thumb {
-    background: #718096;
-    border-radius: 4px;
-  }
-  
   /* Loading and Empty States */
   .transaction-table-empty {
     text-align: center;

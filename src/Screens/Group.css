@@ -1,119 +1,68 @@
-/* General container styles */
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    font-family: Arial, sans-serif;
+/* Base styles with relative units */
+:root {
+    --container-padding: clamp(1rem, 5vw, 2rem);
+    --circle-size: clamp(120px, 25vw, 150px);
+    --form-padding: clamp(1.5rem, 4vw, 2.5rem);
   }
   
-  /* Circles container for a grid layout */
-  .circles-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-  
-  /* Circle button styles */
-  .circle-button {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background-color: #1e88e5;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
-    font-size: 16px;
-  }
-  
-  /* Form styles */
-  .form {
-    width: 100%;
-    max-width: 500px;
-    background-color: #f4f4f4;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .form-title {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 24px;
-  }
+  /* General container styles */
   .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
+    padding: var(--container-padding);
+    font-family: Arial, sans-serif;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
   }
   
-  /* Circles container for a grid layout */
+  /* Circles container with responsive grid */
   .circles-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-bottom: 30px;
-    max-width: 800px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: clamp(1rem, 3vw, 1.5rem);
     width: 100%;
-    margin-top: 10rem;
-}
-
-/* Circle button styles */
-.circle-button {
-    width: 140px;
-    height: 140px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  
+  /* Circle button styles with responsive dimensions */
+  .circle-button {
+    width: var(--circle-size);
+    height: var(--circle-size);
     border-radius: 50%;
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-align: center;
     font-weight: bold;
+    padding: clamp(0.5rem, 2vw, 1rem);
+    font-size: clamp(0.875rem, 2vw, 1rem);
     margin: 0 auto;
-}
-
-/* Unique colors for each circle button */
-.circle-button:nth-child(1) {
-    background-color: #FF6B6B; /* Soft Red */
-}
-
-.circle-button:nth-child(2) {
-    background-color: #4ECDC4; /* Teal */
-}
-
-.circle-button:nth-child(3) {
-    background-color: #45B7D1; /* Sky Blue */
-}
-
-.circle-button:nth-child(4) {
-    background-color: #FDCB6E; /* Muted Yellow */
-}
-
-.circle-button:hover {
+  }
+  
+  /* Responsive color schemes for circle buttons */
+  .circle-button:nth-child(1) { background-color: #FF6B6B; }
+  .circle-button:nth-child(2) { background-color: #4ECDC4; }
+  .circle-button:nth-child(3) { background-color: #45B7D1; }
+  .circle-button:nth-child(4) { background-color: #FDCB6E; }
+  
+  .circle-button:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-}
-
-.create-user-button {
-    background-color: #FF5722 !important;
-    margin-bottom: 30px;
-}
-
-/* Rest of the previous CSS remains the same */
+  }
+  
+  /* Create user button */
+  .create-user-button {
+    background-color: #FF5722;
+    margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  }
   
   /* Form Overlay */
   .form-overlay {
@@ -127,108 +76,126 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 20px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    overflow-y: auto;
   }
   
-  /* Form styles */
+  /* Responsive Form styles */
   .form {
     width: 100%;
-    max-width: 700px;
+    max-width: min(700px, 90vw);
     background-color: white;
-    padding: 40px;
-    border-radius: 15px;
+    padding: var(--form-padding);
+    border-radius: clamp(0.5rem, 2vw, 0.9375rem);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     position: relative;
+    margin: auto;
   }
   
   .form-title {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: clamp(1.5rem, 4vw, 2rem);
     color: #333;
-    font-size: 24px;
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
     font-weight: 600;
   }
   
+  /* Responsive form layout */
   .form-row {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
   
   .form-group {
     flex: 1;
-  }
-  
-  .form-group.full-width {
-    width: 100%;
+    min-width: 100%;
   }
   
   .form label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
     color: #555;
     font-weight: 600;
+    font-size: clamp(0.875rem, 2vw, 1rem);
   }
   
-  .form input, 
+  .form input,
   .form select {
     width: 100%;
-    padding: 12px;
+    padding: clamp(0.5rem, 2vw, 0.75rem);
     border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 0.5rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
     transition: border-color 0.3s ease;
-  }
-  
-  .form input:focus, 
-  .form select:focus {
-    outline: none;
-    border-color: #2196F3;
-    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
   }
   
   .form-actions {
     display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: clamp(1.5rem, 4vw, 2rem);
   }
   
-  .submit-button, 
+  .submit-button,
   .cancel-button {
-    padding: 12px 25px;
+    width: 100%;
+    padding: clamp(0.75rem, 2vw, 1rem);
     border: none;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 0.5rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .submit-button {
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  .submit-button:hover {
-    background-color: #45a049;
-  }
-  
-  .submit-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-  
-  .cancel-button {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .cancel-button:hover {
-    background-color: #d32f2f;
   }
   
   .error-message {
     background-color: #f8d7da;
     color: #721c24;
-    padding: 15px;
-    border-radius: 8px;
+    padding: clamp(0.75rem, 2vw, 1rem);
+    border-radius: 0.5rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    margin-top: 1rem;
+  }
+  
+  /* Media Queries for larger screens */
+  @media (min-width: 768px) {
+    .form-row {
+      flex-direction: row;
+      gap: 1.5rem;
+    }
+  
+    .form-group {
+      min-width: 0;
+    }
+  
+    .form-actions {
+      flex-direction: row;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+  
+    .submit-button,
+    .cancel-button {
+      width: auto;
+      min-width: 150px;
+    }
+  }
+  
+  /* Additional accessibility improvements */
+  @media (prefers-reduced-motion: reduce) {
+    .circle-button,
+    .submit-button,
+    .cancel-button {
+      transition: none;
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .circle-button,
+    .submit-button,
+    .cancel-button {
+      border: 2px solid #000;
+    }
   }

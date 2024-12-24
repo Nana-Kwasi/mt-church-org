@@ -11,6 +11,7 @@ const MemberFinancialDashboard = ({ memberId }) => {
   const [currencyGroupedCollections, setCurrencyGroupedCollections] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
   const db = getFirestore(app);
 
   useEffect(() => {

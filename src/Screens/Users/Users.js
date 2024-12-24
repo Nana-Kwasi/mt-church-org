@@ -209,10 +209,10 @@ const UserCard = ({ user, onEdit, onDelete }) => {
                     className="form-control"
                   >
                     <option value="Admin">Admin</option>
-                    <option value="Support 1">Support 1</option>
-                    <option value="Support 2">Support 2</option>
-                    <option value="Support 3">Support 3</option>
-                    <option value="Support 4">Support 4</option>
+                    <option value="Support">Support</option>
+                    <option value="Finance">Finance</option>
+                    <option value="View">View</option>
+                    {/* <option value="Support 4">Support 4</option> */}
                   </select>
                 </div>
               </div>
