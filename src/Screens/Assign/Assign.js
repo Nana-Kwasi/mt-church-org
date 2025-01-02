@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where,addDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import app from "../../Component/Config/Config";
 import "../../donation.css";
@@ -13,6 +13,8 @@ const AssignMember = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [paymentData, setPaymentData] = useState({});
+  const [selectedPaymentAmount, setSelectedPaymentAmount] = useState("");
   const db = getFirestore(app);
 
   useEffect(() => {
@@ -23,7 +25,6 @@ const AssignMember = () => {
           id: doc.id,
           ...doc.data(),
         }));
-
         setMembers(membersData);
         setFilteredMembers(membersData);
       } catch (error) {
@@ -33,9 +34,26 @@ const AssignMember = () => {
         setLoading(false);
       }
     };
-
     fetchMembers();
   }, [db]);
+
+  const fetchPaymentData = async (memberId) => {
+    try {
+      const paymentsRef = collection(db, "Money Collections");
+      const q = query(paymentsRef, where("memberId", "==", memberId));
+      const snapshot = await getDocs(q);
+      const payments = {};
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        payments[data.paymentType] = data.amount;
+      });
+      setPaymentData(payments);
+      return payments;
+    } catch (error) {
+      console.error("Error fetching payment data:", error);
+      return {};
+    }
+  };
 
   const handleSearch = (event) => {
     const query = event.target.value.toLowerCase();
@@ -50,30 +68,75 @@ const AssignMember = () => {
     );
   };
 
-  const handleRowClick = (member) => {
+  const handleRowClick = async (member) => {
+    const payments = await fetchPaymentData(member.id);
     setSelectedMember(member);
+    setSelectedPaymentAmount(payments[member.membershipFee] || "");
     setIsModalVisible(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSelectedMember((prev) => ({ ...prev, [name]: value }));
+    if (name === "membershipFee") {
+      setSelectedPaymentAmount(paymentData[value] || "");
+      setSelectedMember(prev => ({
+        ...prev,
+        [name]: value,
+        paymentAmount: paymentData[value] || ""
+      }));
+    } else if (name === "paymentAmount") {
+      setSelectedPaymentAmount(value);
+      setSelectedMember(prev => ({
+        ...prev,
+        paymentAmount: value
+      }));
+    } else {
+      setSelectedMember(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSaveChanges = async () => {
     try {
       const memberRef = doc(db, "Members", selectedMember.id);
+  
+      // Update the Members collection
       await updateDoc(memberRef, selectedMember);
+  
+      // Update the Money Collections collection
+      if (selectedMember.membershipFee && selectedPaymentAmount) {
+        const paymentsRef = collection(db, "Money Collections");
+        const q = query(paymentsRef, where("memberId", "==", selectedMember.id), where("paymentType", "==", selectedMember.membershipFee));
+        const snapshot = await getDocs(q);
+  
+        if (!snapshot.empty) {
+          // If a document exists for the selected payment type, update it
+          const paymentDocRef = snapshot.docs[0].ref;
+          await updateDoc(paymentDocRef, {
+            amount: Number(selectedPaymentAmount)
+          });
+        } else {
+          // If no document exists, create a new one
+          await addDoc(paymentsRef, {
+            memberId: selectedMember.id,
+            paymentType: selectedMember.membershipFee,
+            amount: Number(selectedPaymentAmount)
+          });
+        }
+      }
+  
+      // Update the local state to reflect changes
       setMembers((prev) =>
         prev.map((member) =>
           member.id === selectedMember.id ? { ...selectedMember } : member
         )
       );
+  
       setIsModalVisible(false);
     } catch (error) {
-      console.error("Error updating member:", error);
+      console.error("Error updating member or payment data:", error);
     }
   };
+  
 
   const handleDeleteMember = async () => {
     try {
@@ -86,13 +149,9 @@ const AssignMember = () => {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
 
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
   return (
     <div className="members">
       <h1>Manage Members</h1>
@@ -105,7 +164,7 @@ const AssignMember = () => {
           className="search-bar"
         />
       </div>
-  
+
       {filteredMembers.length === 0 ? (
         <div>No matching members found.</div>
       ) : (
@@ -134,7 +193,7 @@ const AssignMember = () => {
           </table>
         </div>
       )}
-  
+
       {isModalVisible && (
         <div className="custom-modal-overlay">
           <div className="custom-modal-content">
@@ -147,7 +206,7 @@ const AssignMember = () => {
                 &times;
               </button>
             </div>
-  
+
             <form className="custom-modal-form">
               <label>Title</label>
               <input
@@ -156,7 +215,6 @@ const AssignMember = () => {
                 value={selectedMember.title || ""}
                 onChange={handleInputChange}
               />
-  
               <label>First Name</label>
               <input
                 type="text"
@@ -164,7 +222,6 @@ const AssignMember = () => {
                 value={selectedMember.firstName || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Last Name</label>
               <input
                 type="text"
@@ -172,7 +229,6 @@ const AssignMember = () => {
                 value={selectedMember.lastName || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Middle Name</label>
               <input
                 type="text"
@@ -180,7 +236,6 @@ const AssignMember = () => {
                 value={selectedMember.middleName || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Contact</label>
               <input
                 type="text"
@@ -188,7 +243,6 @@ const AssignMember = () => {
                 value={selectedMember.contact || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Gender</label>
               <input
                 type="text"
@@ -196,7 +250,6 @@ const AssignMember = () => {
                 value={selectedMember.gender || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Date of Birth</label>
               <input
                 type="date"
@@ -204,7 +257,6 @@ const AssignMember = () => {
                 value={selectedMember.dob || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Membership</label>
               <input
                 type="text"
@@ -212,7 +264,6 @@ const AssignMember = () => {
                 value={selectedMember.membership || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Class</label>
               <input
                 type="text"
@@ -220,7 +271,6 @@ const AssignMember = () => {
                 value={selectedMember.class || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Assign Class Leader</label>
               <input
                 type="text"
@@ -228,7 +278,6 @@ const AssignMember = () => {
                 value={selectedMember.assignClassLeader || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Home Town</label>
               <input
                 type="text"
@@ -236,7 +285,6 @@ const AssignMember = () => {
                 value={selectedMember.homeTown || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Home Region</label>
               <input
                 type="text"
@@ -244,7 +292,6 @@ const AssignMember = () => {
                 value={selectedMember.homeRegion || ""}
                 onChange={handleInputChange}
               />
-  
               <label>GPS</label>
               <input
                 type="text"
@@ -252,7 +299,6 @@ const AssignMember = () => {
                 value={selectedMember.gps || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Profession</label>
               <input
                 type="text"
@@ -260,7 +306,6 @@ const AssignMember = () => {
                 value={selectedMember.profession || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Employment Status</label>
               <input
                 type="text"
@@ -268,7 +313,6 @@ const AssignMember = () => {
                 value={selectedMember.employmentStatus || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Marital Status</label>
               <input
                 type="text"
@@ -276,7 +320,6 @@ const AssignMember = () => {
                 value={selectedMember.maritalStatus || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Organisations</label>
               <input
                 type="text"
@@ -284,7 +327,6 @@ const AssignMember = () => {
                 value={selectedMember.organisations || ""}
                 onChange={handleInputChange}
               />
-  
               <label>Role</label>
               <input
                 type="text"
@@ -292,16 +334,31 @@ const AssignMember = () => {
                 value={selectedMember.role || ""}
                 onChange={handleInputChange}
               />
-  
-              <label>Membership Fee</label>
-              <input
-                type="number"
+              <label>Membership Fee Type</label>
+              <select
                 name="membershipFee"
-                value={selectedMember.membershipFee || 0}
+                value={selectedMember.membershipFee || ""}
                 onChange={handleInputChange}
-              />
+              >
+                <option value="">Select Payment Type</option>
+                <option value="Tithe">Tithe</option>
+                <option value="Welfare">Welfare</option>
+                <option value="Funeral Contributions">Funeral Contributions</option>
+                <option value="Special Offerings">Special Offerings</option>
+              </select>
+              {selectedMember.membershipFee && (
+                <>
+                  <label>Payment Amount</label>
+                  <input
+                    type="number"
+                    name="paymentAmount"
+                    value={selectedPaymentAmount}
+                    onChange={handleInputChange}
+                  />
+                </>
+              )}
             </form>
-  
+
             <div className="custom-modal-buttons">
               <button className="save-button" onClick={handleSaveChanges}>
                 Save Changes

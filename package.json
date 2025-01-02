@@ -1,8 +1,9 @@
 {
   "name": "zion",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "dependencies": {
+    "axios": "^1.7.9",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.0.2",
@@ -13,6 +14,7 @@
     "papaparse": "^5.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-phone-input-2": "^2.15.1",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.0",
     "semver": "^7.6.3",

@@ -188,7 +188,6 @@
 // };
 
 // export default MemberDetails;
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, addDoc, collection, getDocs } from "firebase/firestore";
@@ -220,6 +219,124 @@ const MemberDetails = () => {
   const [showTransactionTable, setShowTransactionTable] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [reportDateRange, setReportDateRange] = useState({ start: null, end: null });
+  const [apiError, setApiError] = useState("");
+
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "";
+    const cleaned = phone.replace(/\D/g, '');
+    return cleaned.startsWith('233') ? cleaned : `233${cleaned.startsWith('0') ? cleaned.slice(1) : cleaned}`;
+  };
+
+  const sendPaymentSMS = async (phoneNumber, message) => {
+    try {
+      console.log("==== SMS SENDING DEBUG START ====");
+      
+      const hubtelEndpoint = 'https://smsc.hubtel.com/v1/messages/send';
+      const clientId = 'vxojxzbs';
+      const clientSecret = 'szojhvcz';
+      
+      // Ensure phone number is properly formatted
+      const formattedPhone = phoneNumber.replace(/\D/g, '');
+      
+      const params = new URLSearchParams({
+        clientid: clientId,
+        clientsecret: clientSecret,
+        from: 'MtZionMeth',
+        to: formattedPhone,
+        content: message
+      });
+  
+      const url = `${hubtelEndpoint}?${params.toString()}`;
+      
+      console.log("Sending SMS to:", formattedPhone);
+      console.log("Message content:", message);
+  
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+  
+      const responseData = await response.json();
+      console.log("Hubtel API Response:", responseData);
+  
+      if (responseData.status === 0) {
+        console.log("SMS sent successfully");
+        return responseData;
+      } else {
+        throw new Error(responseData.statusDescription || 'SMS sending failed');
+      }
+  
+    } catch (error) {
+      console.error("SMS Sending Error:", {
+        error: error.message,
+        phoneNumber,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
+    }
+  };
+  
+  const handlePay = async () => {
+    if (!selectedOption || !selectedCurrency || !amount) {
+      alert("Please select a payment type, currency, and enter an amount.");
+      return;
+    }
+  
+    setIsProcessing(true);
+    setApiError("");
+  
+    try {
+      // Save payment to Firestore
+      const paymentData = {
+        memberId: memberId,
+        memberName: getFullName(),
+        paymentType: selectedOption,
+        currency: selectedCurrency,
+        amount: parseFloat(amount),
+        timestamp: new Date(),
+        comment: selectedOption === "Funeral Contributions" ? comment : ""
+      };
+  
+      // Save to Firestore
+      const moneyCollectionsRef = collection(db, "Money Collections");
+      const docRef = await addDoc(moneyCollectionsRef, paymentData);
+      console.log("Payment saved with ID:", docRef.id);
+  
+      // Handle SMS
+      if (member.contact) {
+        const message = `Payment Confirmation from Mt Zion Methodist Church\nType: ${selectedOption}\nAmount: ${selectedCurrency} ${amount}\nDate: ${new Date().toLocaleDateString()}\nThank you for your payment.`;
+        
+        try {
+          const smsResult = await sendPaymentSMS(member.contact, message);
+          if (smsResult) {
+            console.log("SMS sent successfully:", smsResult);
+            alert("Payment recorded and SMS confirmation sent successfully!");
+          }
+        } catch (smsError) {
+          console.error("SMS Error:", smsError);
+          alert(`Payment successful! However, SMS notification failed: ${smsError.message}`);
+        }
+      } else {
+        alert("Payment successful! (No SMS sent - no contact number found)");
+      }
+  
+      // Clear form on success
+      setShowPayModal(false);
+      setSelectedOption("");
+      setSelectedCurrency("");
+      setAmount("");
+      setComment("");
+  
+    } catch (error) {
+      console.error("Payment Processing Error:", error);
+      setApiError(error.message);
+      alert("Error processing payment: " + error.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchMemberDetails = async () => {
@@ -243,50 +360,7 @@ const MemberDetails = () => {
     fetchMemberDetails();
   }, [db, memberId]);
 
-  const handlePay = async () => {
-    if (!selectedOption || !selectedCurrency || !amount) {
-      alert("Please select a payment type, currency, and enter an amount.");
-      return;
-    }
-
-    if (selectedOption === "Funeral Contributions" && !comment) {
-      alert("Please add a comment for funeral contribution.");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const paymentData = {
-        memberId: memberId,
-        memberName: getFullName(),
-        paymentType: selectedOption,
-        currency: selectedCurrency,
-        amount: parseFloat(amount),
-        timestamp: new Date(),
-      };
-
-      if (selectedOption === "Funeral Contributions") {
-        paymentData.comment = comment;
-      }
-
-      const moneyCollectionsRef = collection(db, "Money Collections");
-      await addDoc(moneyCollectionsRef, paymentData);
-
-      alert("Payment recorded successfully!");
-      setShowPayModal(false);
-      setSelectedOption("");
-      setSelectedCurrency("");
-      setAmount("");
-      setComment("");
-    } catch (error) {
-      console.error("Error recording payment:", error);
-      alert("Payment recording failed. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
+ 
   const generateReport = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates");
@@ -365,7 +439,6 @@ const MemberDetails = () => {
       const doc = new jsPDF("landscape");
       const currentDate = new Date().toLocaleString();
 
-      // Add headers
       doc.setFontSize(16);
       doc.text(`Financial Report for ${getFullName()}`, 20, 20);
       doc.setFontSize(12);
@@ -376,7 +449,6 @@ const MemberDetails = () => {
       );
       doc.text(`Generated on: ${currentDate}`, 20, 40);
 
-      // Prepare table data
       const tableData = transactions.map((transaction, index) => [
         index + 1,
         transaction.memberName,
@@ -386,7 +458,6 @@ const MemberDetails = () => {
         transaction.comment || "---"
       ]);
 
-      // Add table
       doc.autoTable({
         head: [["#", "Member Name", "Payment Type", "Amount", "Date", "Comment"]],
         body: tableData,
@@ -395,7 +466,6 @@ const MemberDetails = () => {
         headStyles: { fillColor: [66, 139, 202] },
       });
 
-      // Add summary
       let yPos = doc.lastAutoTable.finalY + 20;
       doc.setFontSize(14);
       doc.text("Summary by Currency:", 20, yPos);
@@ -405,7 +475,6 @@ const MemberDetails = () => {
         doc.text(`${currency}: ${total.toFixed(2)}`, 20, yPos);
       });
 
-      // Save the PDF
       doc.save(`${getFullName()}_Financial_Report.pdf`);
     } catch (error) {
       console.error("Error in PDF generation:", error);
@@ -433,6 +502,7 @@ const MemberDetails = () => {
   if (!member) {
     return <div>Member details not available.</div>;
   }
+
   const renderTransactionTable = () => {
     if (!showTransactionTable) return null;
 
@@ -492,6 +562,7 @@ const MemberDetails = () => {
       </div>
     );
   };
+
   return (
     <div className="member-details">
       <div className="row-container">
@@ -502,25 +573,24 @@ const MemberDetails = () => {
       </div>
       
       <div className="button-container">
-  <button
-    className="pay-button"
-    style={{ backgroundColor: "#007bff" }} // Blue color
-    onClick={() => setShowPayModal(true)}
-  >
-    Pay
-  </button>
-  <button
-    className="pay-button"
-    style={{ backgroundColor: "#ff4b5c" }} // Red color
-    onClick={() => setShowReportModal(true)}
-  >
-    Generate Report
-  </button>
-</div>
-
+        <button
+          className="pay-button"
+          style={{ backgroundColor: "#007bff" }}
+          onClick={() => setShowPayModal(true)}
+        >
+          Pay
+        </button>
+        <button
+          className="pay-button"
+          style={{ backgroundColor: "#ff4b5c" }}
+          onClick={() => setShowReportModal(true)}
+        >
+          Generate Report
+        </button>
+      </div>
 
       <table className="member-details-table">
-      <tbody>
+        <tbody>
           <tr>
             <th>Age</th>
             <td>{member.age || "N/A"}</td>
@@ -561,7 +631,9 @@ const MemberDetails = () => {
           </tr>
         </tbody>
       </table>
+
       {renderTransactionTable()}
+      
       <div className="financial-section mt-6">
         <h2 className="text-2xl font-bold mb-4">Financial Overview</h2>
         <MemberFinancialDashboard memberId={memberId} />
@@ -571,6 +643,7 @@ const MemberDetails = () => {
         <div className="modal">
           <div className="modal-content">
             <h2>Make a Payment</h2>
+            {apiError && <div className="error-message">{apiError}</div>}
             <select
               value={selectedOption}
               onChange={(e) => setSelectedOption(e.target.value)}

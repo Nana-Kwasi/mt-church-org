@@ -468,10 +468,10 @@ const Attendance = () => {
   <table className="attendance-table">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Attendance Type</th>
-        <th>Number of People</th>
-        <th>Date</th>
+        <th style={{color:'black'}}>#</th>
+        <th style={{color:'black'}}>Attendance Type</th>
+        <th style={{color:'black'}}>Number of People</th>
+        <th style={{color:'black'}}>Date</th>
         {/* <th>Time&Date</th> */}
         {/* <th>Submitted At</th> */}
       </tr>

@@ -2,6 +2,7 @@
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
+    margin-left: 300px;
     padding: 20px;
     background-color: #f9f9f9;
     border-radius: 10px;
@@ -80,4 +81,61 @@
   .submit-button:hover {
     background-color: #45a049;
   }
+  .select-with-add {
+    display: flex;
+    gap: 10px;
+  }
   
+  .select-with-add select {
+    flex: 1;
+  }
+  
+  .select-with-add button {
+    padding: 0 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .new-input-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .new-input-container input {
+    flex: 1;
+  }
+  
+  .new-input-container button {
+    padding: 5px 15px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .delete-btn {
+    margin-left: 10px;
+    padding: 2px 6px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .select-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+  }
+  
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }

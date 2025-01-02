@@ -3,6 +3,8 @@ import { getFirestore, doc, setDoc, getDocs, collection, query, where } from "fi
 import app from "../../Component/Config/Config";
 import { v4 as uuidv4 } from 'uuid';
 import "../../registration.css";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const Registration = () => {
   const db = getFirestore(app);
@@ -15,7 +17,8 @@ const Registration = () => {
     "Miss",
     "Dr.",
     "Rev.",
-    "Prof."
+    "Prof.",
+    "Madam"
   ];
 
   const EMPLOYMENT_STATUSES = [
@@ -53,7 +56,10 @@ const Registration = () => {
     "Guild",
     "Girls Fellowship", 
     "Youth Fellowship", 
-    "Gospel Band"
+    "Gospel Band",
+    "Women's Fellowship",
+    "Brigade", 
+    "Digital Team"
   ];
 
   const ROLES = [
@@ -94,7 +100,7 @@ const Registration = () => {
   ];
 
   const ASSISTANT_CLASS_LEADERS = [
-    "Esther Klottey",
+    "Esther Kottey",
     "Anabella Yamoah",
     "Mercy Arhur",
     "Beatrice Arhin",
@@ -295,7 +301,14 @@ const Registration = () => {
 
         <div className="form-group">
           <label>Contact:</label>
-          <input type="text" name="contact" value={formData.contact} onChange={handleChange} required />
+          <PhoneInput
+            country={'gh'}
+            value={formData.contact}
+            onChange={phone => setFormData(prev => ({ ...prev, contact: phone }))}
+            inputProps={{
+              required: true
+            }}
+          />
         </div>
 
         <div className="form-group">

@@ -1,124 +1,56 @@
-/* Donation Page Styles with Enhanced Design */
 .members {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f6f8fa;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f6f8fa;
 }
 
 .members h1 {
-    color: #2c3e50;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-bar-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .search-bar {
-    width: 100%;
-    max-width: 500px;
-    padding: 0.75rem;
-    border: 2px solid #e0e7f1;
-    border-radius: 12px;
-    font-size: 1rem;
-    background-color: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 500px;
+  padding: 0.75rem;
+  border: 2px solid #e0e7f1;
+  border-radius: 12px;
+  font-size: 1rem;
+  background-color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .search-bar:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
 }
 
 .table-container {
-    width: 100%;
-    overflow-x: auto;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
-    background-color: white;
-    margin-left: 90px; /* Shift table to the right */
-    width: calc(100% - 40px); /* Adjust width to compensate for margin */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+
 }
 
-.members-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background-color: white;
-}
-
-.members-table thead {
-    background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
-    color: white;
-}
-
-.members-table th {
-    text-align: left;
-    padding: 1.25rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-    white-space: nowrap; /* Prevent header text from wrapping */
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.members-table tbody tr {
-    transition: all 0.2s ease;
-}
-
-.clickable-row {
-    cursor: pointer;
-}
-
-.clickable-row:hover {
-    background-color: #f0f4f8;
-    transform: scale(1.01);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.members-table td {
-    padding: 1.25rem;
-    border-bottom: 1px solid #e9ecef;
-    color: #2c3e50;
-    font-weight: 500;
-    white-space: nowrap; /* Prevent text from wrapping */
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.members-table tbody tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-.members-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.error {
-    color: #ffffff;
-    text-align: center;
-    padding: 1.5rem;
-    background: linear-gradient(to right, #ff416c, #ff4b2b);
-    border-radius: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
 .add-collection-btn {
   background: linear-gradient(135deg, #4299e1, #3182ce);
   color: white;
@@ -127,6 +59,8 @@
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin: 1rem 0;
+  margin-left: 500px;  /* Added margin-left to push button right */
 }
 
 .add-collection-btn:hover {
@@ -135,7 +69,80 @@
   background: linear-gradient(135deg, #3182ce, #2c5282);
 }
 
-/* Modal Styles */
+.members-table {
+  width: 90%;
+  margin: 0 auto;
+  margin-top: 4rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  /* background-color: white;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); */
+  border-radius: 12px;
+  margin-left: 190px;  /* Added margin-left to push content right */
+
+}
+
+.members-table thead {
+  background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+  color: white;
+  
+}
+
+.members-table th {
+  text-align: left;
+  padding: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.members-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+  color: #2c3e50;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.members-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.members-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.members-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background-color: #f0f4f8;
+  transform: scale(1.01);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.error {
+  color: #ffffff;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(to right, #ff416c, #ff4b2b);
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -168,7 +175,6 @@
   border-bottom: 2px solid #edf2f7;
 }
 
-/* Collection Card Styles */
 .collection-card {
   background-color: #fff;
   border: 1px solid #e2e8f0;
@@ -183,7 +189,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Form Controls */
 .form-select {
   width: 100%;
   padding: 0.5rem 1rem;
@@ -218,7 +223,6 @@
   outline: none;
 }
 
-/* Amount Row */
 .amount-row {
   display: flex;
   gap: 1rem;
@@ -235,7 +239,6 @@
   flex: 1;
 }
 
-/* Action Buttons */
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -292,7 +295,6 @@
   text-decoration: underline;
 }
 
-/* Button Groups */
 .button-group {
   display: flex;
   gap: 1rem;
@@ -301,7 +303,6 @@
   border-top: 1px solid #e2e8f0;
 }
 
-/* Remove Button */
 .remove-btn {
   color: #f56565;
   background: none;
@@ -316,59 +317,60 @@
   color: #e53e3e;
 }
 
-/* Search Bar */
-.search-bar-container {
-  margin-bottom: 2rem;
-}
-
-.search-bar {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background-color: white;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-/* Responsive adjustments */
 @media screen and (max-width: 768px) {
-    .table-container {
-        margin-left: 10px;
-        width: calc(100% - 20px);
-    }
-
-    .members {
-        padding: 1rem;
-    }
-
-    .search-bar {
-        max-width: 100%;
-    }
-
-    .members-table th, 
-    .members-table td {
-        padding: 0.75rem;
-        font-size: 0.85rem;
-    }
-}
-
-/* Loading state styles */
-.members p {
+  .table-container {
+    margin: 0;
+    padding: 10px;
+    width: 100%;
+  }
+  
+  .members-table {
+    width: 100%;
+  }
+  
+  .add-collection-btn {
+    position: static;
+    margin: 0.5rem 0;
+    width: 100%;
     text-align: center;
-    color: #6c757d;
-    padding: 2rem;
-    font-size: 1.1rem;
-    font-weight: 500;
+  }
+  
+  .members {
+    padding: 1rem;
+  }
+  
+  .search-bar {
+    max-width: 100%;
+  }
+  
+  .members-table th,
+  .members-table td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
 }
 
-/* Cute Animations */
+.members p {
+  text-align: center;
+  color: #6c757d;
+  padding: 2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .members-table tbody tr {
-    animation: fadeIn 0.5s ease forwards;
-    opacity: 0;
-    animation-delay: calc(0.1s * var(--i));
+  animation: fadeIn 0.5s ease forwards;
+  opacity: 0;
+  animation-delay: calc(0.1s * var(--i));
 }

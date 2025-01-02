@@ -448,7 +448,7 @@ const Reports = () => {
             onChange={(e) => setPaymentType(e.target.value)}
           >
             <option value="">Select Payment Type</option>
-            <option value="Membership Fee">Membership Fee</option>
+            <option value="Tithe">Tithe</option>
             <option value="Donation">Donation</option>
             <option value="Funeral Contributions">Funeral Contributions</option>
             <option value="Special Offerings">Special Offerings</option>
@@ -496,11 +496,11 @@ const Reports = () => {
             <table className="transaction-table">
               <thead>
                 <tr>
-                  <th style={{color:"white"}}>#</th>
-                  <th style={{color:"white"}}>Member Name</th>
-                  <th style={{color:"white"}}>Payment Type</th>
-                  <th style={{color:"white"}}>Amount</th>
-                  <th style={{color:"white"}}>Date</th>
+                  <th style={{color:"salmon"}}>#</th>
+                  <th style={{color:"salmon"}}>Member Name</th>
+                  <th style={{color:"salmon"}}>Payment Type</th>
+                  <th style={{color:"salmon"}}>Amount</th>
+                  <th style={{color:"salmon"}}>Date</th>
                 </tr>
               </thead>
               <tbody>

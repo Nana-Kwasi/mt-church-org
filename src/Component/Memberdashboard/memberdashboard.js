@@ -209,12 +209,12 @@ const MemberFinancialDashboard = ({ memberId }) => {
             <table className="transaction-table">
               <thead>
                 <tr>
-                  <th style={{color:"white"}}>Month/Year</th>
-                  <th style={{color:"white"}}>Date</th>
-                  <th style={{color:"white"}}>Payment Type</th>
-                  <th style={{color:"white"}}>Amount</th>
-                  <th style={{color:"white"}}>Currency</th>
-                  <th style={{color:"white"}}>Total</th>
+                  <th style={{color:"black"}}>Month/Year</th>
+                  <th style={{color:"black"}}>Date</th>
+                  <th style={{color:"black"}}>Payment Type</th>
+                  <th style={{color:"black"}}>Amount</th>
+                  <th style={{color:"black"}}>Currency</th>
+                  <th style={{color:"black"}}>Total</th>
                 </tr>
               </thead>
               <tbody>

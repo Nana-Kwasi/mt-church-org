@@ -45,6 +45,7 @@ const Sidebar = () => {
         { path: "/groups", label: "Manage Users" },
         { path: "/assign-member", label: "Manage Members" },
         { path: "/reports", label: "Reports" },
+        { path: "/announcements", label: "Logout" },
       ],
       Finance: [
         { path: "/dashboard", label: "Dashboard" },
@@ -52,6 +53,7 @@ const Sidebar = () => {
         { path: "/attendance", label: "Attendance" },
         { path: "/donation", label: "Collections" },
         { path: "/reports", label: "Reports" },
+        { path: "/announcements", label: "Logout" },
       ],
       Support: [
         { path: "/dashboard", label: "Dashboard" },
@@ -59,6 +61,7 @@ const Sidebar = () => {
         { path: "/attendance", label: "Attendance" },
         { path: "/donation", label: "Collections" },
         { path: "/reports", label: "Reports" },
+        { path: "/announcements", label: "Logout" },
       ],
       User: [{ path: "/dashboard", label: "Dashboard" }],
     };

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import app from "../../Component/Config/Config";
-
+import "../../donation.css"
 const COLLECTION_TYPES = [
   "Total Offering",
   "Annual Harvest",

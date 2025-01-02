@@ -1,4 +1,3 @@
-// Dashboard.js
 import React, { useEffect, useState } from 'react';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
@@ -108,10 +107,15 @@ const Dashboard = () => {
 
         // Fetch Collections Data
         const collectionsSnapshot = await getDocs(collection(db, 'Money Collections'));
-        const collectionsList = collectionsSnapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id
-        }));
+        const collectionsList = collectionsSnapshot.docs
+          .map(doc => ({
+            ...doc.data(),
+            id: doc.id
+          }))
+          .filter(collection => {
+            const collectionDate = collection.timestamp?.toDate?.() || new Date(collection.timestamp);
+            return collectionDate.getFullYear() === currentYear;
+          });
 
         setAttendanceData(attendanceList);
         setMembersData(membersList);
@@ -127,7 +131,7 @@ const Dashboard = () => {
 
         const totalAttendance = Object.values(attendanceBreakdown).reduce((sum, count) => sum + count, 0);
 
-        // Group collections by currency
+        // Group collections by currency (only for current year)
         const totalCollectionsByCurrency = collectionsList.reduce((acc, item) => {
           const currency = item.currency || 'GHS';
           const amount = item.amount || 0;
@@ -190,7 +194,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="stat-item green">
-          <h3 className="stat-item green">Total Collections</h3>
+          <h3 className="stat-item green">Total Collections ({getCurrentYear()})</h3>
           {Object.entries(summaryStats.totalCollectionsByCurrency).map(([currency, amount]) => (
             <p key={currency} className="mb-2">
               {currency} {amount.toLocaleString()}
