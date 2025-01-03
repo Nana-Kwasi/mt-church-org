@@ -175,6 +175,7 @@ const AssignMember = () => {
                 <th>First Name</th>
                 <th>Last Name</th>
                 <th>Contact</th>
+                <th>Age</th>
               </tr>
             </thead>
             <tbody>
@@ -187,6 +188,7 @@ const AssignMember = () => {
                   <td>{member.firstName || "N/A"}</td>
                   <td>{member.lastName || "N/A"}</td>
                   <td>{member.contact || "N/A"}</td>
+                  <td>{member.age || "N/A"}</td>
                 </tr>
               ))}
             </tbody>

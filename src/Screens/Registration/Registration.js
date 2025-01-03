@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getFirestore, doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import app from "../../Component/Config/Config";
 import { v4 as uuidv4 } from 'uuid';
@@ -6,10 +6,22 @@ import "../../registration.css";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
+
 const Registration = () => {
   const db = getFirestore(app);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showChildModal, setShowChildModal] = useState(false);
+  const [parentsList, setParentsList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [childFormData, setChildFormData] = useState({
+    name: '',
+    dob: '',
+    age: '',
+    class: '',
+    organisation: '',
+    parentId: ''
+  });
 
   const TITLES = [
     "Mr.",
@@ -130,7 +142,72 @@ const Registration = () => {
     assignClassLeader: '',
     assignAssistantClassLeader: ''
   });
+  const CHILD_CLASS_OPTIONS = [
+    "Beginners",
+    "Primary",
+    "Timothy"
+  ];
 
+  const CHILD_ORGANISATIONS = [
+    "MYF",
+    "MGF",
+    "Bridge",
+    "Junior Choir"
+  ];
+
+  useEffect(() => {
+    fetchParents();
+  }, []);
+
+  const fetchParents = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "Members"));
+      const parents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: `${doc.data().firstName} ${doc.data().lastName}`,
+        ...doc.data()
+      }));
+      setParentsList(parents);
+    } catch (error) {
+      console.error("Error fetching parents:", error);
+    }
+  };
+
+  const handleChildChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'dob') {
+      const age = calculateAge(value);
+      setChildFormData(prev => ({ ...prev, [name]: value, age }));
+    } else {
+      setChildFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleChildSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const selectedParent = parentsList.find(parent => parent.id === childFormData.parentId);
+      const documentId = uuidv4();
+      await setDoc(doc(db, "Children", documentId), {
+        ...childFormData,
+        parentName: selectedParent ? `${selectedParent.firstName} ${selectedParent.lastName}` : '',
+        registrationDate: new Date().toISOString()
+      });
+      alert('Child registered successfully!');
+      setChildFormData({
+        name: '',
+        dob: '',
+        age: '',
+        class: '',
+        organisation: '',
+        parentId: ''
+      });
+      setShowChildModal(false);
+    } catch (error) {
+      console.error("Error registering child:", error);
+      alert('Failed to register child');
+    }
+  };
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
@@ -253,7 +330,134 @@ const Registration = () => {
 
   return (
     <div className="registration-screen">
-      <h2>Member Registration</h2>
+      
+      <div className="header-container">
+        <h2>Member Registration</h2>
+        <button
+          className="add-child-button"
+          onClick={() => setShowChildModal(true)}
+        >
+          Add Children
+        </button>
+      </div>
+
+      {showChildModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Register Child</h3>
+              <button className="close-button" onClick={() => setShowChildModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleChildSubmit}>
+              <div className="child-form-group">
+                <label>Name:</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={childFormData.name}
+                  onChange={handleChildChange}
+                  required
+                />
+              </div>
+
+              <div className="child-form-group">
+                <label>Date of Birth:</label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={childFormData.dob}
+                  onChange={handleChildChange}
+                  required
+                />
+              </div>
+
+              <div className="child-form-group">
+                <label>Age:</label>
+                <input
+                  type="number"
+                  name="age"
+                  value={childFormData.age}
+                  readOnly
+                />
+              </div>
+
+              <div className="child-form-group">
+                <label>Class:</label>
+                <select
+                  name="class"
+                  value={childFormData.class}
+                  onChange={handleChildChange}
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {CHILD_CLASS_OPTIONS.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="child-form-group">
+                <label>Organisation:</label>
+                <select
+                  name="organisation"
+                  value={childFormData.organisation}
+                  onChange={handleChildChange}
+                  required
+                >
+                  <option value="">Select Organisation</option>
+                  {CHILD_ORGANISATIONS.map(org => (
+                    <option key={org} value={org}>{org}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="child-form-group">
+                <label>Link Parent:</label>
+                <div className="parent-search">
+                  <input
+                    type="text"
+                    placeholder="Search parent..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <select
+                    name="parentId"
+                    value={childFormData.parentId}
+                    onChange={handleChildChange}
+                    required
+                  >
+                    <option value="">Select Parent</option>
+                    {parentsList
+                      .filter(parent => 
+                        parent.name.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map(parent => (
+                        <option key={parent.id} value={parent.id}>
+                          {parent.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <button 
+  type="submit" 
+  className="submit-child-button"
+  disabled={isLoading}
+>
+  {isLoading ? (
+    <>
+      <span className="spinner"></span>
+      <span>Registering...</span>
+    </>
+  ) : (
+    'Register Child'
+  )}
+</button>
+            </form>
+          </div>
+        </div>
+      )}
       <form className="registration-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Title:</label>

@@ -32,6 +32,7 @@
   max-width: 500px;
   margin: 0 auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+ 
 }
 
 .form-title {
@@ -52,6 +53,7 @@
   margin-top: 5px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  
 }
 
 .form button {
@@ -74,6 +76,7 @@
   background-color: #f4f4f4;
   padding: 20px;
   border-radius: 8px;
+  margin-left: 170px;
 }
 
 .filter-section {

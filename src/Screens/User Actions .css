@@ -16,6 +16,7 @@ table {
     border-spacing: 0;
     font-size: 0.95rem;
     background: transparent;
+    margin-left: 190px;
 }
 
 /* Header Styles */
@@ -162,13 +163,13 @@ th:nth-child(5), td:nth-child(5) { width: 45%; }
     color: white;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 10px;
+    border-radius: 30px;
     cursor: pointer;
-    width: 6%;
+    width: 9%;
     font-weight: 700;
     font-size: 20px;
     transition: background-color 0.2s ease;
-    margin-right: 30px;
+    margin-right: 50px;
   }
 
   .logout-button:hover {
