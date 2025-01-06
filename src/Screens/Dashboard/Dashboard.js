@@ -171,7 +171,54 @@ const Dashboard = () => {
   if (loading) {
     return <div className="dashboard">Loading...</div>;
   }
+  const processAttendanceData = (data) => {
+    const groupedData = data.reduce((acc, item) => {
+      const date = formatDate(item.submittedAt || item.date);
+      if (!acc[date]) {
+        acc[date] = {
+          date,
+          Adult: 0,
+          Children: 0
+        };
+      }
+      
+      const type = item.attendanceType || 'Other';
+      if (type === 'Adult' || type === 'Children') {
+        acc[date][type] += parseInt(item.numberOfPeople || 0);
+      }
+      
+      return acc;
+    }, {});
 
+    return Object.values(groupedData).sort((a, b) => 
+      new Date(a.date) - new Date(b.date)
+    );
+  };
+
+  // Custom tooltip component to format the date display
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip" style={{
+          backgroundColor: 'white',
+          padding: '10px',
+          border: '1px solid #ccc',
+          borderRadius: '4px'
+        }}>
+          <p style={{ margin: '0', fontWeight: 'bold' }}>{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ 
+              color: entry.color,
+              margin: '5px 0 0'
+            }}>
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
   return (
     <div className="dashboard">
       <h2>Dashboard Overview</h2>
@@ -229,13 +276,45 @@ const Dashboard = () => {
 
         <div className="chart-item">
           <h3>Attendance Trends</h3>
-          <LineChart width={600} height={300} data={attendanceData}>
+          <LineChart 
+            width={600} 
+            height={300} 
+            data={processAttendanceData(attendanceData)}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
+            <XAxis 
+              dataKey="date"
+              tick={false}  // This hides the X-axis labels
+              axisLine={true}  // Keep the axis line
+              tickLine={true}  // Keep the tick marks
+            />
+            <YAxis 
+              label={{ 
+                value: 'Number of People', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { textAnchor: 'middle' }
+              }}
+            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Line type="monotone" dataKey="numberOfPeople" stroke="#8884d8" />
+            <Line 
+              type="monotone" 
+              dataKey="Adult" 
+              stroke="#8884d8" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 8 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="Children" 
+              stroke="#82ca9d" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 8 }}
+            />
           </LineChart>
         </div>
       </div>
@@ -277,7 +356,7 @@ const Dashboard = () => {
             <tbody>
               {attendanceData.slice(0, 5).map((attendance) => (
                 <tr key={attendance.id}>
-                  <td>{attendance.date}</td>
+                  <td>{attendance.submittedAt? formatDate(attendance.submittedAt) : 'N/A'}</td>
                   <td>{attendance.attendanceType}</td>
                   <td>{attendance.numberOfPeople}</td>
                 </tr>

@@ -15,6 +15,9 @@ const AssignMember = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [paymentData, setPaymentData] = useState({});
   const [selectedPaymentAmount, setSelectedPaymentAmount] = useState("");
+  const [children, setChildren] = useState([]);
+  const [isChildFieldVisible, setIsChildFieldVisible] = useState(false);
+  const [selectedChild, setSelectedChild] = useState("");
   const db = getFirestore(app);
 
   useEffect(() => {
@@ -24,6 +27,7 @@ const AssignMember = () => {
         const membersData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          
         }));
         setMembers(membersData);
         setFilteredMembers(membersData);
@@ -34,8 +38,26 @@ const AssignMember = () => {
         setLoading(false);
       }
     };
+
+    const fetchChildren = async () => {
+      try {
+        const childrenSnapshot = await getDocs(collection(db, "Children"));
+        const childrenData = childrenSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          fullName: `${doc.data().firstName || ''} ${doc.data().lastName || ''}`.trim()
+        }));
+        console.log("Fetched children:", childrenData);  // Debug log
+        setChildren(childrenData);
+      } catch (error) {
+        console.error("Error fetching children:", error);
+      }
+    };
+
     fetchMembers();
+    fetchChildren();
   }, [db]);
+
 
   const fetchPaymentData = async (memberId) => {
     try {
@@ -97,25 +119,43 @@ const AssignMember = () => {
 
   const handleSaveChanges = async () => {
     try {
-      const memberRef = doc(db, "Members", selectedMember.id);
+      // Create an array of child objects with both ID and name
+      const childrenWithNames = selectedMember.children?.map(childId => {
+        const child = children.find(c => c.id === childId);
+        return {
+          id: childId,
+          name: child ? (child.name || `${child.firstName} ${child.lastName}`) : '',
+        };
+      }) || [];
   
+      // Prepare the update data
+      const updateData = {
+        ...selectedMember,
+        children: childrenWithNames  // Now contains array of objects with id and name
+      };
+  
+      console.log("Saving member with data:", updateData);
+      const memberRef = doc(db, "Members", selectedMember.id);
+      
       // Update the Members collection
-      await updateDoc(memberRef, selectedMember);
+      await updateDoc(memberRef, updateData);
   
       // Update the Money Collections collection
       if (selectedMember.membershipFee && selectedPaymentAmount) {
         const paymentsRef = collection(db, "Money Collections");
-        const q = query(paymentsRef, where("memberId", "==", selectedMember.id), where("paymentType", "==", selectedMember.membershipFee));
+        const q = query(
+          paymentsRef, 
+          where("memberId", "==", selectedMember.id),
+          where("paymentType", "==", selectedMember.membershipFee)
+        );
         const snapshot = await getDocs(q);
   
         if (!snapshot.empty) {
-          // If a document exists for the selected payment type, update it
           const paymentDocRef = snapshot.docs[0].ref;
           await updateDoc(paymentDocRef, {
             amount: Number(selectedPaymentAmount)
           });
         } else {
-          // If no document exists, create a new one
           await addDoc(paymentsRef, {
             memberId: selectedMember.id,
             paymentType: selectedMember.membershipFee,
@@ -124,19 +164,36 @@ const AssignMember = () => {
         }
       }
   
-      // Update the local state to reflect changes
-      setMembers((prev) =>
-        prev.map((member) =>
-          member.id === selectedMember.id ? { ...selectedMember } : member
+      // Update local state
+      setMembers(prev =>
+        prev.map(member =>
+          member.id === selectedMember.id ? updateData : member
         )
       );
   
       setIsModalVisible(false);
     } catch (error) {
-      console.error("Error updating member or payment data:", error);
+      console.error("Error updating member:", error);
     }
   };
-  
+
+    const handleChildSelect = (e) => {
+    const childId = e.target.value;
+    console.log("Selected child ID:", childId);  // Debug log
+    setSelectedChild(childId);
+    
+    // Update selectedMember with the new child
+    setSelectedMember(prev => {
+      const updatedChildren = prev.children || [];
+      if (childId && !updatedChildren.includes(childId)) {
+        return {
+          ...prev,
+          children: [...updatedChildren, childId]
+        };
+      }
+      return prev;
+    });
+  };
 
   const handleDeleteMember = async () => {
     try {
@@ -151,7 +208,6 @@ const AssignMember = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="error">{error}</div>;
-
   return (
     <div className="members">
       <h1>Manage Members</h1>
@@ -238,6 +294,29 @@ const AssignMember = () => {
                 value={selectedMember.middleName || ""}
                 onChange={handleInputChange}
               />
+               <label>Children</label>
+              <div className="children-list">
+                {selectedMember.children && selectedMember.children.map((child, index) => (
+                  <div key={index} className="child-entry">
+                    <input
+                      type="text"
+                      value={child.name || ''}
+                      onChange={(e) => {
+                        const updatedChildren = [...selectedMember.children];
+                        updatedChildren[index] = {
+                          ...updatedChildren[index],
+                          name: e.target.value
+                        };
+                        setSelectedMember(prev => ({
+                          ...prev,
+                          children: updatedChildren
+                        }));
+                      }}
+                      placeholder="Child's name"
+                    />
+                  </div>
+                ))}
+              </div>
               <label>Contact</label>
               <input
                 type="text"
@@ -336,6 +415,7 @@ const AssignMember = () => {
                 value={selectedMember.role || ""}
                 onChange={handleInputChange}
               />
+              
               <label>Membership Fee Type</label>
               <select
                 name="membershipFee"
@@ -359,7 +439,82 @@ const AssignMember = () => {
                   />
                 </>
               )}
-            </form>
+<div className="child-section">
+  <button 
+    type="button"
+    className="add-child-button"
+    onClick={() => setIsChildFieldVisible(!isChildFieldVisible)}
+  >
+    {isChildFieldVisible ? 'Hide Child Selection' : 'Add a Child'}
+  </button>
+  
+  {isChildFieldVisible && (
+    <div className="child-select-container">
+      <label className="child-select-label">Select Child</label>
+      <div className="child-search">
+        <select
+          value={selectedChild}
+          onChange={handleChildSelect}
+          className="child-select"
+        >
+          <option value="">Select a child</option>
+          {children
+            .filter(child => 
+              !selectedMember?.children?.includes(child.id)
+            )
+            .map((child) => (
+              <option key={child.id} value={child.id}>
+                {child.name || `${child.firstName} ${child.lastName}`}
+              </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )}
+
+  {selectedMember?.children?.length > 0 && (
+  <div className="added-children-container">
+    <label>Added Children:</label>
+    <ul className="added-children-list">
+      {selectedMember.children.map((childId) => {
+        const child = children.find((c) => c.id === childId);
+        return child ? (
+          <li key={childId} className="added-child-item">
+            <input
+              type="text"
+              value={child.name || `${child.firstName} ${child.lastName}`}
+              onChange={(e) => {
+                const updatedChildren = children.map(c => 
+                  c.id === childId ? {...c, name: e.target.value} : c
+                );
+                setChildren(updatedChildren);
+              }}
+            />
+            <span 
+              className="remove-child"
+              onClick={() => {
+                setSelectedMember(prev => ({
+                  ...prev,
+                  children: prev.children.filter(id => id !== childId)
+                }));
+              }}
+              style={{ 
+                marginLeft: '10px', 
+                cursor: 'pointer',
+                color: 'red',
+                fontWeight: 'bold'
+              }}
+            >
+              ×
+            </span>
+          </li>
+        ) : null;
+      })}
+    </ul>
+  </div>
+)}
+</div>
+   </form>
 
             <div className="custom-modal-buttons">
               <button className="save-button" onClick={handleSaveChanges}>

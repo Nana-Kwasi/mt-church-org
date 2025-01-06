@@ -593,41 +593,41 @@ const MemberDetails = () => {
         <tbody>
           <tr>
             <th>Age</th>
-            <td>{member.age || "N/A"}</td>
+            <td>{member.age || "Not Available"}</td>
             <th>Contact</th>
-            <td>{member.contact || "N/A"}</td>
+            <td>{member.contact || "Not Available"}</td>
           </tr>
           <tr>
             <th>Gender</th>
-            <td>{member.gender || "N/A"}</td>
+            <td>{member.gender || "Not Available"}</td>
             <th>Class</th>
-            <td>{member.assignClass || "N/A"}</td>
+            <td>{member.assignClass || "Not Available"}</td>
             <th>Class Leader</th>
-            <td>{member.assignClassLeader || "N/A"}</td>
+            <td>{member.assignClassLeader || "Not Available"}</td>
           </tr>
           <tr>
             <th>Date of Birth</th>
-            <td>{member.dob || "N/A"}</td>
+            <td>{member.dob || "Not Available"}</td>
             <th>Employment Status</th>
-            <td>{member.employmentStatus || "N/A"}</td>
+            <td>{member.employmentStatus || "Not Available"}</td>
             <th>GPS</th>
-            <td>{member.gps || "N/A"}</td>
+            <td>{member.gps || "Not Available"}</td>
           </tr>
           <tr>
             <th>Home Region</th>
-            <td>{member.homeRegion || "N/A"}</td>
+            <td>{member.homeRegion || "Not Available"}</td>
             <th>Home Town</th>
-            <td>{member.homeTown || "N/A"}</td>
+            <td>{member.homeTown || "Not Available"}</td>
             <th>Marital Status</th>
-            <td>{member.maritalStatus || "N/A"}</td>
+            <td>{member.maritalStatus || "Not Available"}</td>
           </tr>
           <tr>
             <th>Membership</th>
-            <td>{member.membership || "N/A"}</td>
+            <td>{member.membership || "Not Available"}</td>
             <th>Profession</th>
-            <td>{member.profession || "N/A"}</td>
+            <td>{member.profession || "Not Available"}</td>
             <th>Role</th>
-            <td>{member.role || "N/A"}</td>
+            <td>{member.role || "Not Available"}</td>
           </tr>
         </tbody>
       </table>

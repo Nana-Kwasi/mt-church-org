@@ -30,7 +30,8 @@ const Registration = () => {
     "Dr.",
     "Rev.",
     "Prof.",
-    "Madam"
+    "Madam",
+    "Nana"
   ];
 
   const EMPLOYMENT_STATUSES = [
@@ -528,6 +529,9 @@ const Registration = () => {
             <option value="Married">Married</option>
             <option value="Divorced">Divorced</option>
             <option value="Widowed">Widowed</option>
+            <option value="Blessing">Blessing</option>
+            <option value="Traditional Marriage">Traditional Marriage</option>
+            <option value="Cohabiting">Cohabiting</option>
           </select>
         </div>
 
