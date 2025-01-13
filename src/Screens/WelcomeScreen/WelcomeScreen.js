@@ -8,6 +8,11 @@ const WelcomeScreen = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTempForm, setShowTempForm] = useState(false);
+  const [tempEmail, setTempEmail] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+  const [tempPhone, setTempPhone] = useState('');
+  const [tempFormError, setTempFormError] = useState('');
 
   // Function to log user activity
   const logUserActivity = async (userId, userName, userRole, actionType, status, details = '') => {
@@ -34,6 +39,69 @@ const WelcomeScreen = () => {
     }
   };
 
+  const handleCreateTempUser = async (e) => {
+    e.preventDefault();
+    setTempFormError('');
+
+    if (!tempEmail || !tempPassword || !tempPhone) {
+      setTempFormError('All fields are required!');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const db = getFirestore();
+
+      // Check if email already exists in temporary users
+      const existingUserQuery = query(
+        collection(db, 'Users'),
+        where('email', '==', tempEmail)  // Remove toLowerCase()
+      );
+      const existingUserSnapshot = await getDocs(existingUserQuery);
+
+      if (!existingUserSnapshot.empty) {
+        setTempFormError('This email has already been used for temporary access.');
+        return;
+      }
+
+      // Calculate expiration time (24 hours from now)
+      const expirationTime = new Date();
+      expirationTime.setHours(expirationTime.getHours() + 24);
+
+      // Create temporary user
+      await addDoc(collection(db, 'Users'), {
+        email: tempEmail,  // Store email as-is without toLowerCase()
+        password: tempPassword,
+        phone: tempPhone,
+        role: 'Admin', // Giving full access
+        isTemporary: true,
+        expirationTime: expirationTime.toISOString(),
+        createdAt: serverTimestamp(),
+        isActive: true
+      });
+
+      await logUserActivity(
+        'system',
+        'System',
+        'System',
+        'CREATE_TEMP_USER',
+        'SUCCESS',
+        `Temporary user created: ${tempEmail}`
+      );
+
+      setTempFormError('');
+      setShowTempForm(false);
+      setTempEmail('');
+      setTempPassword('');
+      setTempPhone('');
+      alert('Temporary account created successfully! Valid for 24 hours.');
+    } catch (error) {
+      console.error('Error creating temporary user:', error);
+      setTempFormError('An error occurred while creating the temporary account.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -48,16 +116,33 @@ const WelcomeScreen = () => {
 
       const db = getFirestore();
       const userAccessRef = collection(db, 'Users');
-      const q = query(userAccessRef, where('email', '==', email.toLowerCase()));
+      // Use case-sensitive email comparison
+      const q = query(userAccessRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
 
-        // Check if the account is active only if `isActive` exists in the document
+        // Check if account is temporary and expired
+        if (userData.isTemporary) {
+          const expirationTime = new Date(userData.expirationTime);
+          if (new Date() > expirationTime) {
+            await logUserActivity(
+              userDoc.id,
+              email,
+              userData.role,
+              'LOGIN',
+              'FAILED',
+              'Temporary account expired'
+            );
+            setError('This temporary account has expired.');
+            return;
+          }
+        }
+
+        // Check if the account is active
         if ('isActive' in userData && !userData.isActive) {
-          // Log failed login attempt - account inactive
           await logUserActivity(
             userDoc.id,
             email,
@@ -70,8 +155,8 @@ const WelcomeScreen = () => {
           return;
         }
 
+        // Compare passwords directly without toLowerCase()
         if (userData.password === password) {
-          // Log successful login
           await logUserActivity(
             userDoc.id,
             userData.name || email,
@@ -81,14 +166,12 @@ const WelcomeScreen = () => {
             'User successfully logged in'
           );
 
-          // Store user info in localStorage
           localStorage.setItem('userRole', userData.role);
           localStorage.setItem('userName', userData.name || email);
-          localStorage.setItem('userId', userDoc.id); // Store user ID for future activity logging
+          localStorage.setItem('userId', userDoc.id);
 
           navigate('/dashboard');
         } else {
-          // Log failed login attempt - incorrect password
           await logUserActivity(
             userDoc.id,
             email,
@@ -100,7 +183,6 @@ const WelcomeScreen = () => {
           setError('Invalid email or password!');
         }
       } else {
-        // Log failed login attempt - user not found
         await logUserActivity(
           'unknown',
           email,
@@ -113,7 +195,6 @@ const WelcomeScreen = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      // Log system error
       await logUserActivity(
         'unknown',
         email,
@@ -127,8 +208,6 @@ const WelcomeScreen = () => {
       setIsLoading(false);
     }
   };
-
-  // Existing styles
   const inputStyle = {
     width: '100%',
     padding: '12px',
@@ -153,9 +232,15 @@ const WelcomeScreen = () => {
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     transition: 'all 0.3s ease',
   };
+
+  const secondaryButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: '#4a5568',
+    marginTop: '10px',
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Navbar */}
       <nav style={{
         width: '100%',
         backgroundColor: '#f8f9fa',
@@ -180,7 +265,6 @@ const WelcomeScreen = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main style={{
         flex: 1,
         backgroundImage: "url('/pack (1).jpg')",
@@ -204,7 +288,6 @@ const WelcomeScreen = () => {
           Welcome To Methodist Church Of Ghana Portal
         </h1>
 
-        {/* Login Card */}
         <div style={{
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           padding: '30px',
@@ -213,79 +296,191 @@ const WelcomeScreen = () => {
           maxWidth: '500px',
           boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
         }}>
-          <h2 style={{
-            color: '#002366',
-            marginBottom: '30px',
-            textAlign: 'center',
-            fontSize: '24px',
-          }}>
-            User Login
-          </h2>
+          {!showTempForm ? (
+            <>
+              <h2 style={{
+                color: '#002366',
+                marginBottom: '30px',
+                textAlign: 'center',
+                fontSize: '24px',
+              }}>
+                User Login
+              </h2>
 
-          {error && (
-            <div style={{
-              backgroundColor: '#ffebee',
-              color: '#c62828',
-              padding: '12px',
-              borderRadius: '6px',
-              marginBottom: '20px',
-              textAlign: 'center',
-              fontSize: '14px',
-            }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '20px' }}>
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                style={inputStyle}
-                autoComplete="email"
-              />
-            </div>
-
-            <div style={{ marginBottom: '25px' }}>
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={inputStyle}
-                autoComplete="current-password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              style={buttonStyle}
-              disabled={isLoading}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#1a3c7d';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#002366';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              {isLoading ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ marginRight: '10px' }}>Logging in...</span>
-                </span>
-              ) : (
-                'Login'
+              {error && (
+                <div style={{
+                  backgroundColor: '#ffebee',
+                  color: '#c62828',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  marginBottom: '20px',
+                  textAlign: 'center',
+                  fontSize: '14px',
+                }}>
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
+
+              <form onSubmit={handleLogin}>
+                <div style={{ marginBottom: '20px' }}>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                    style={inputStyle}
+                    autoComplete="email"
+                  />
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={inputStyle}
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  style={buttonStyle}
+                  disabled={isLoading}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#1a3c7d';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#002366';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {isLoading ? 'Logging in...' : 'Login'}
+                </button>
+
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => setShowTempForm(true)}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#2d3748';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#4a5568';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Create Temporal Default Login
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 style={{
+                color: '#002366',
+                marginBottom: '30px',
+                textAlign: 'center',
+                fontSize: '24px',
+              }}>
+                Create Temporary Login
+              </h2>
+
+              {tempFormError && (
+                <div style={{
+                  backgroundColor: '#ffebee',
+                  color: '#c62828',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  marginBottom: '20px',
+                  textAlign: 'center',
+                  fontSize: '14px',
+                }}>
+                  {tempFormError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateTempUser}>
+                <div style={{ marginBottom: '20px' }}>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={tempEmail}
+                    onChange={(e) => setTempEmail(e.target.value.toLowerCase())}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={tempPassword}
+                    onChange={(e) => setTempPassword(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={tempPhone}
+                    onChange={(e) => setTempPhone(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  style={buttonStyle}
+                  disabled={isLoading}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#1a3c7d';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#002366';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {isLoading ? 'Creating...' : 'Create Temporary Login'}
+                </button>
+
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowTempForm(false);
+                    setTempEmail('');
+                    setTempPassword('');
+                    setTempPhone('');
+                    setTempFormError('');
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#2d3748';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#4a5568';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Back to Login
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </main>
 
-      {/* Footer */}
       <footer style={{
+        backgroundColor: '#002366',
+        color: 'white',
+        textAlign: 'center',
+        padding: '15px',
         backgroundColor: '#002366',
         color: 'white',
         textAlign: 'center',

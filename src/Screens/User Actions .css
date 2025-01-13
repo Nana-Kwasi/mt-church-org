@@ -167,7 +167,7 @@ th:nth-child(5), td:nth-child(5) { width: 45%; }
     cursor: pointer;
     width: 9%;
     font-weight: 700;
-    font-size: 20px;
+    font-size: 15px;
     transition: background-color 0.2s ease;
     margin-right: 50px;
   }

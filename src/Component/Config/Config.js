@@ -1,14 +1,13 @@
 
 import { initializeApp } from 'firebase/app';
 
-
 const firebaseConfig = {
-    apiKey: "AIzaSyAh9GsRLNoyz3MjrShTtpBb13wnfDRiW2g",
-    authDomain: "mt-zion-14355.firebaseapp.com",
-    projectId: "mt-zion-14355",
-    storageBucket: "mt-zion-14355.firebasestorage.app",
-    messagingSenderId: "766720097480",
-    appId: "1:766720097480:web:30719777b63116e84c39fd"
+  apiKey: "AIzaSyC4n-zSIxE9EEL0aV407wKILEzGrcQP1jc",
+  authDomain: "mt-zion-methodist-church.firebaseapp.com",
+  projectId: "mt-zion-methodist-church",
+  storageBucket: "mt-zion-methodist-church.firebasestorage.app",
+  messagingSenderId: "760378892397",
+  appId: "1:760378892397:web:3a1b25662e44fb5008df64"
   };
 
 const app = initializeApp(firebaseConfig);
