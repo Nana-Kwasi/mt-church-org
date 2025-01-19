@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "../attendance.css"
+import * as XLSX from 'xlsx';
 
 const Attendance = () => {
   const db = getFirestore(app);
@@ -299,39 +300,158 @@ const Attendance = () => {
     return Array.from({ length: 6 }, (_, i) => currentYear - i);
   };
 
+ // Add these Excel export functions
 
+const generateExcel = () => {
+  // Create worksheet data with proper formatting
+  const wsData = [
+    // Header row
+    ['Attendance Report'],
+    [`Date Range: ${startDate} to ${endDate}`],
+    [`Attendance Type: ${selectedAttendanceType || "All"}`],
+    [`Generated on: ${new Date().toLocaleString()}`],
+    [], // Empty row for spacing
+    // Table headers
+    ['#', 'Attendance Type', 'Number of People', 'Date'],
+    // Table data
+    ...filteredLogs.map((log, index) => [
+      index + 1,
+      log.attendanceType,
+      parseInt(log.numberOfPeople),
+      new Date(log.date).toLocaleDateString()
+    ]),
+    [], // Empty row before summary
+    [`Total Attendance: ${filteredLogs.reduce((sum, log) => sum + parseInt(log.numberOfPeople), 0)}`]
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Set column widths
+  const cols = [
+    { wch: 5 },  // #
+    { wch: 15 }, // Attendance Type
+    { wch: 15 }, // Number of People
+    { wch: 15 }, // Date
+  ];
+  ws['!cols'] = cols;
+
+  // Merge cells for header
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Date Range
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, // Attendance Type
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } }, // Generated Date
+    { s: { r: wsData.length - 1, c: 0 }, e: { r: wsData.length - 1, c: 3 } } // Total
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance Report');
+  XLSX.writeFile(wb, `Filtered_Attendance_Report.xlsx`);
+};
+
+const generateYearlyExcel = () => {
+  if (!yearlyReportSummary) return;
+
+  // Create worksheet data with proper formatting
+  const wsData = [
+    // Header rows
+    [`Yearly Attendance Report - ${yearlyReportSummary.selectedYear}`],
+    [`Generated on: ${new Date().toLocaleString()}`],
+    [], // Empty row for spacing
+    // Table headers
+    ['Month', 'Children', 'Adult', 'Total'],
+    // Monthly data
+    ...yearlyReports.map(report => [
+      report.month,
+      report.children,
+      report.adult,
+      report.total
+    ]),
+    [], // Empty row before totals
+    // Yearly totals with proper formatting
+    ['YEARLY TOTAL',
+      yearlyReportSummary.yearlyTotals.Children,
+      yearlyReportSummary.yearlyTotals.Adult,
+      yearlyReportSummary.yearlyTotals.Total
+    ]
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Set column widths
+  const cols = [
+    { wch: 15 }, // Month
+    { wch: 12 }, // Children
+    { wch: 12 }, // Adult
+    { wch: 12 }, // Total
+  ];
+  ws['!cols'] = cols;
+
+  // Merge cells for header
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Generated Date
+  ];
+
+  // Add some basic styling
+  // Style for headers
+  for (let C = 0; C <= 3; C++) {
+    const headerCell = XLSX.utils.encode_cell({ r: 3, c: C });
+    if (!ws[headerCell]) ws[headerCell] = {};
+    ws[headerCell].s = {
+      font: { bold: true },
+      alignment: { horizontal: 'center' }
+    };
+  }
+
+  // Style for yearly totals row
+  const lastRowIndex = wsData.length - 1;
+  for (let C = 0; C <= 3; C++) {
+    const totalCell = XLSX.utils.encode_cell({ r: lastRowIndex, c: C });
+    if (!ws[totalCell]) ws[totalCell] = {};
+    ws[totalCell].s = {
+      font: { bold: true },
+      alignment: { horizontal: C === 0 ? 'left' : 'right' }
+    };
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Yearly Report');
+  XLSX.writeFile(wb, `Yearly_Attendance_Report_${yearlyReportSummary.selectedYear}.xlsx`);
+};
   return (
     <div className="container">
-      <div className="circles-container">
-        {/* Buttons for different sections */}
-        <div 
-          className="circle-button" 
-          onClick={() => {
-            setIsFormVisible(!isFormVisible);
-            setIsReportsVisible(false);
-            // Reset form when opening
-            setAttendanceData({
-              date: '',
-              numberOfPeople: '',
-              attendanceType: ''
-            });
-          }}
-        >
-          Record Attendance
-        </div>
-        <div 
-          className="circle-button" 
-          onClick={() => {
-            setIsReportsVisible(!isReportsVisible);
-            setIsFormVisible(false);
-          }}
-        >
-          Generate Monthly Attendance Reports
-        </div>
-      </div>
+      <div className="button-container">
+  <div 
+    className="attendance-button record-button"
+    onClick={() => {
+      setIsFormVisible(!isFormVisible);
+      setIsReportsVisible(false);
+      // Reset form when opening
+      setAttendanceData({
+        date: '',
+        numberOfPeople: '',
+        attendanceType: ''
+      });
+    }}
+  >
+    Record Attendance
+  </div>
+
+  <div 
+    className="attendance-button report-button"
+    onClick={() => {
+      setIsReportsVisible(!isReportsVisible);
+      setIsFormVisible(false);
+    }}
+  >
+    Generate Monthly Attendance Reports
+  </div>
+</div>
       
       {/* Attendance Form */}
       {isFormVisible && (
+        <div className='container-formss'>
         <div className="form">
           <h2 className="form-title">Attendance Record</h2>
           
@@ -410,6 +530,7 @@ const Attendance = () => {
             </button>
           </form>
         </div>
+        </div>
       )}
 
       {/* Attendance Reports Section */}
@@ -446,7 +567,7 @@ const Attendance = () => {
               </select>
             </label>
             <button onClick={fetchAttendanceLogs} className="fetch-btn">
-              Fetch Attendance Records
+              Generate
             </button>
           </div>
 
@@ -455,7 +576,7 @@ const Attendance = () => {
           ) : error ? (
             <p className="error">{error}</p>
           ) : filteredLogs.length === 0 ? (
-            <p>No attendance records found for the selected criteria.</p>
+            <p></p>
           ) : (
             <>
               <div className="summary-section">
@@ -465,9 +586,9 @@ const Attendance = () => {
               </div>
 
               <div className="table-container">
-  <table className="attendance-table">
-    <thead>
-      <tr>
+             <table className="attendance-table">
+         <thead>
+          <tr>
         <th style={{color:'black'}}>#</th>
         <th style={{color:'black'}}>Attendance Type</th>
         <th style={{color:'black'}}>Number of People</th>
@@ -506,15 +627,19 @@ const Attendance = () => {
     </tfoot>
   </table>
 </div>
-<button onClick={generatePDF} className="download-btn">
-                Download PDF Report
-              </button>
+<div className="dropdown">
+    <button className="download-btn">Download Report ▼</button>
+    <div className="dropdown-content">
+      <button onClick={generatePDF}>Download as PDF</button>
+      <button onClick={generateExcel}>Download as Excel</button>
+    </div>
+  </div>
             </>
           )}
         </div>
       )}
        <div className="yearly-report-section">
-        <h2>Generate Yearly Report</h2>
+        <h2> Yearly Report</h2>
         <div className="yearly-report-controls">
           <label>
             <select 
@@ -531,7 +656,7 @@ const Attendance = () => {
             onClick={generateYearlyReport} 
             disabled={!selectedYear || yearlyReportLoading}
           >
-            {yearlyReportLoading ? 'Generating Report...' : 'Generate Yearly Report'}
+            {yearlyReportLoading ? 'Generating Report...' : 'Generate'}
           </button>
         </div>
 
@@ -544,9 +669,10 @@ const Attendance = () => {
         {/* Yearly Report Display */}
         {yearlyReportSummary && (
           <div className="yearly-report-display">
-            <h3>Yearly Attendance Report - {yearlyReportSummary.selectedYear}</h3>
             
             <div className="yearly-summary">
+            <h3>Yearly Attendance Report - {yearlyReportSummary.selectedYear}</h3>
+
               <h4>Yearly Totals</h4>
               <p>Children: {yearlyReportSummary.yearlyTotals.Children}</p>
               <p>Adult: {yearlyReportSummary.yearlyTotals.Adult}</p>
@@ -556,10 +682,10 @@ const Attendance = () => {
             <table className="yearly-report-table">
               <thead>
                 <tr>
-                  <th>Month</th>
-                  <th>Children</th>
-                  <th>Adult</th>
-                  <th>Total</th>
+                  <th style={{color:'black'}}>Month</th>
+                  <th style={{color:'black'}}>Children</th>
+                  <th style={{color:'black'}}>Adult</th>
+                  <th style={{color:'black'}}>Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -575,12 +701,13 @@ const Attendance = () => {
             </table>
 
             <div className="yearly-report-actions">
-              <button 
-                onClick={generateYearlyPDF}
-                className="download-btn"
-              >
-                Download PDF Report
-              </button>
+            <div className="dropdown">
+    <button className="download-btn">Download Report ▼</button>
+    <div className="dropdown-content">
+      <button onClick={generateYearlyPDF}>Download as PDF</button>
+      <button onClick={generateYearlyExcel}>Download as Excel</button>
+    </div>
+  </div>
             </div>
           </div>
         )}

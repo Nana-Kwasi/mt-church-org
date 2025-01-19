@@ -196,6 +196,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import app from "../../Component/Config/Config";
 import "../detail.css";
+import * as XLSX from 'xlsx';
 import MemberFinancialDashboard from "../../Component/Memberdashboard/memberdashboard";
 
 const MemberDetails = () => {
@@ -220,6 +221,10 @@ const MemberDetails = () => {
   const [transactions, setTransactions] = useState([]);
   const [reportDateRange, setReportDateRange] = useState({ start: null, end: null });
   const [apiError, setApiError] = useState("");
+  const [selectedPaymentType, setSelectedPaymentType] = useState("all");
+  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+
+
 
   const formatPhoneNumber = (phone) => {
     if (!phone) return "";
@@ -361,7 +366,7 @@ const MemberDetails = () => {
   }, [db, memberId]);
 
  
-  const generateReport = async () => {
+   const generateReport = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates");
       return;
@@ -391,7 +396,8 @@ const MemberDetails = () => {
         if (
           data.memberId === memberId &&
           timestamp >= start &&
-          timestamp <= end
+          timestamp <= end &&
+          (selectedPaymentType === "all" || data.paymentType === selectedPaymentType)
         ) {
           const transaction = {
             id: doc.id,
@@ -424,7 +430,7 @@ const MemberDetails = () => {
       setShowReportModal(false);
 
       if (transactions.length === 0) {
-        alert("No transactions found for the selected date range.");
+        alert("No transactions found for the selected date range and payment type.");
       }
     } catch (error) {
       console.error("Detailed error in generateReport:", error);
@@ -434,7 +440,7 @@ const MemberDetails = () => {
     }
   };
 
-  const downloadPDF = () => {
+   const downloadPDF = () => {
     try {
       const doc = new jsPDF("landscape");
       const currentDate = new Date().toLocaleString();
@@ -448,6 +454,9 @@ const MemberDetails = () => {
         30
       );
       doc.text(`Generated on: ${currentDate}`, 20, 40);
+      if (selectedPaymentType !== "all") {
+        doc.text(`Payment Type: ${selectedPaymentType}`, 20, 50);
+      }
 
       const tableData = transactions.map((transaction, index) => [
         index + 1,
@@ -461,7 +470,7 @@ const MemberDetails = () => {
       doc.autoTable({
         head: [["#", "Member Name", "Payment Type", "Amount", "Date", "Comment"]],
         body: tableData,
-        startY: 50,
+        startY: selectedPaymentType !== "all" ? 60 : 50,
         styles: { fontSize: 10 },
         headStyles: { fillColor: [66, 139, 202] },
       });
@@ -479,6 +488,51 @@ const MemberDetails = () => {
     } catch (error) {
       console.error("Error in PDF generation:", error);
       alert("Error generating PDF. Please try again.");
+    }
+  };
+
+  const downloadExcel = () => {
+    try {
+      const workbook = XLSX.utils.book_new();
+      
+      // Prepare data for Excel
+      const excelData = transactions.map((transaction, index) => ({
+        "#": index + 1,
+        "Member Name": transaction.memberName,
+        "Payment Type": transaction.paymentType,
+        "Amount": transaction.amount,
+        "Currency": transaction.currency,
+        "Date": transaction.formattedDate,
+        "Comment": transaction.comment || "---"
+      }));
+
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      
+      // Add summary section
+      const summaryData = [
+        ["Summary by Currency"],
+        ["Currency", "Total"],
+        ...Object.entries(currencyTotals).map(([currency, total]) => [
+          currency,
+          total.toFixed(2)
+        ])
+      ];
+
+      // Add empty row and summary
+      XLSX.utils.sheet_add_aoa(worksheet, [[""], ["Report Summary"]], {
+        origin: -1
+      });
+      XLSX.utils.sheet_add_aoa(worksheet, summaryData, { origin: -1 });
+
+      // Add to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Financial Report");
+
+      // Save file
+      XLSX.writeFile(workbook, `${getFullName()}_Financial_Report.xlsx`);
+    } catch (error) {
+      console.error("Error in Excel generation:", error);
+      alert("Error generating Excel file. Please try again.");
     }
   };
 
@@ -512,12 +566,81 @@ const MemberDetails = () => {
           <h2 className="text-2xl font-bold mb-4">Transaction Report</h2>
           <div className="report-info">
             <p>Period: {reportDateRange.start?.toLocaleDateString()} to {reportDateRange.end?.toLocaleDateString()}</p>
-            <button
-              onClick={downloadPDF}
-              className="download-pdf-button"
-            >
-              Download PDF
-            </button>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+  <button
+    onClick={() => setShowDownloadOptions(!showDownloadOptions)}
+    className="download-button"
+    style={{
+      padding: '8px 12px',
+      backgroundColor: '#007bff',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+    }}
+  >
+    Download ▼
+  </button>
+  {showDownloadOptions && (
+    <div
+      className="download-dropdown"
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 8px)', // Positions the dropdown slightly below the button
+        right: 0,
+        backgroundColor: 'white',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        zIndex: 1000,
+        minWidth: '150px', // Ensures the dropdown has a good width
+        padding: '8px 0',
+      }}
+    >
+      <button
+        onClick={() => {
+          downloadPDF();
+          setShowDownloadOptions(false);
+        }}
+        className="dropdown-item"
+        style={{
+          display: 'block',
+          width: '100%',
+          padding: '8px 12px',
+          textAlign: 'left',
+          backgroundColor: 'salmon',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+      >
+        Download as PDF
+      </button>
+      <button
+        onClick={() => {
+          downloadExcel();
+          setShowDownloadOptions(false);
+        }}
+        className="dropdown-item"
+        style={{
+          display: 'block',
+          width: '100%',
+          padding: '8px 12px',
+          textAlign: 'left',
+          backgroundColor: 'gray',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+      >
+        Download as Excel
+      </button>
+    </div>
+  )}
+</div>
+
+         
+        
           </div>
         </div>
 
@@ -581,7 +704,7 @@ const MemberDetails = () => {
           Pay
         </button>
         <button
-          className="pay-button"
+          className="generate-button"
           style={{ backgroundColor: "#ff4b5c" }}
           onClick={() => setShowReportModal(true)}
         >
@@ -707,47 +830,63 @@ const MemberDetails = () => {
       )}
 
       {showReportModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Generate Report</h2>
-            <div className="date-inputs">
-              <div className="input-group">
-                <label>Start Date:</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="form-input"
-                />
-              </div>
-              <div className="input-group">
-                <label>End Date:</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="form-input"
-                />
-              </div>
-            </div>
-            
-            <button
-              onClick={generateReport}
-              className="modal-generate-button"
-              disabled={isProcessing}
-            >
-              {isProcessing ? "Generating..." : "Generate Report"}
-            </button>
-            
-            <button
-              onClick={() => setShowReportModal(false)}
-              className="modal-close-button"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+         <div className="modal">
+         <div className="modal-content">
+           <h2>Generate Report</h2>
+           <div className="date-inputs">
+             <div className="input-group">
+               <label>Start Date:</label>
+               <input
+                 type="date"
+                 value={startDate}
+                 onChange={(e) => setStartDate(e.target.value)}
+                 className="form-input"
+               />
+             </div>
+             <div className="input-group">
+               <label>End Date:</label>
+               <input
+                 type="date"
+                 value={endDate}
+                 onChange={(e) => setEndDate(e.target.value)}
+                 className="form-input"
+               />
+             </div>
+             <div className="input-group">
+               <label>Payment Type:</label>
+               <select
+                 value={selectedPaymentType}
+                 onChange={(e) => setSelectedPaymentType(e.target.value)}
+                 className="form-select"
+               >
+                 <option value="all">All Payment Types</option>
+                 <option value="Tithe">Tithe</option>
+                 <option value="Welfare">Welfare</option>
+                 <option value="Funeral Contributions">Funeral Contributions</option>
+                 <option value="Special Offerings">Special Offerings</option>
+               </select>
+             </div>
+           </div>
+           
+           <button
+             onClick={generateReport}
+             className="modal-generate-button"
+             disabled={isProcessing}
+           >
+             {isProcessing ? "Generating..." : "Generate Report"}
+           </button>
+           
+           <button
+             onClick={() => setShowReportModal(false)}
+             className="modal-close-button"
+           >
+             Close
+           </button>
+         </div>
+       </div>
       )}
+
+      
     </div>
   );
 };

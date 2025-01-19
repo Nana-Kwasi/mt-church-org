@@ -277,7 +277,7 @@ const Dashboard = () => {
         <div className="chart-item">
           <h3>Attendance Trends</h3>
           <LineChart 
-            width={600} 
+            width={400} 
             height={300} 
             data={processAttendanceData(attendanceData)}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -332,14 +332,44 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {collectionsData.slice(0, 5).map((collection) => (
-                <tr key={collection.id}>
-                  <td>{collection.timestamp ? formatDate(collection.timestamp) : 'N/A'}</td>
-                  <td>{collection.paymentType}</td>
-                  <td>{collection.currency || 'GHS'} {collection.amount?.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
+        {Object.values(
+          collectionsData.reduce((acc, collection) => {
+            // Get month and year from timestamp
+            const date = collection.timestamp?.toDate?.() || new Date(collection.timestamp);
+            const monthYear = date.toLocaleDateString('en-GB', { 
+              month: 'long',
+              year: 'numeric'
+            });
+            const type = collection.paymentType || 'Other';
+            const amount = collection.amount || 0;
+            
+            if (!acc[monthYear]) {
+              acc[monthYear] = {
+                monthYear,
+                types: new Set(), // Use Set to store unique types
+                totalAmount: 0
+              };
+            }
+            
+            acc[monthYear].types.add(type);
+            acc[monthYear].totalAmount += amount;
+            return acc;
+          }, {})
+        )
+        .sort((a, b) => {
+          // Sort by date (convert month name to date for proper sorting)
+          const dateA = new Date(a.monthYear);
+          const dateB = new Date(b.monthYear);
+          return dateA - dateB;
+        })
+        .map((group) => (
+          <tr key={group.monthYear}>
+            <td>{group.monthYear}</td>
+            <td>{Array.from(group.types).join(', ')}</td>
+            <td>GHS {group.totalAmount.toLocaleString()}</td>
+          </tr>
+        ))}
+      </tbody>
           </table>
         </div>
 

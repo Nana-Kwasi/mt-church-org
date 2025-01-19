@@ -19,12 +19,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   background-color: #fff;
   padding: 25px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
+  margin-right: 350px;
 }
 
 .filter-section label {
@@ -59,6 +60,7 @@
   width: auto;
   text-align: center;
   white-space: nowrap;
+  margin-right: 120px;
 }
 
 .fetch-btn {
@@ -67,13 +69,7 @@
   border: none;
 }
 
-.download-btn {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  margin: 2rem 0;
-  float: right;
-}
+
 
 .fetch-btn:hover, .download-btn:hover {
   transform: translateY(-2px);
@@ -86,6 +82,60 @@
   border-radius: 8px;
   margin-bottom: clamp(15px, 2vw, 20px);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+   transform: translateX(-110px); 
+}
+
+
+.download-buttons {
+  margin-top: 1rem;
+  text-align: center; /* Center align */
+}
+
+.download-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.download-btn.dropdown-toggle {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%; /* Below the button */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(56, 86, 59);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(43, 78, 94, 0.1);
+  z-index: 1000;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+  background-color: salmon;
+}
+
+.dropdown {
+  display: inline-block;
+  position: relative;
 }
 
 .summary-section h3 {
@@ -102,12 +152,12 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
   margin: 0 auto;
-  width: 100%;
+  width: 80%;
   -webkit-overflow-scrolling: touch;
 }
 
 .transaction-table {
-  width: 100%;
+  width: 80%;
   border-collapse: collapse;
   min-width: 600px;
 }
@@ -118,6 +168,7 @@
   text-align: left;
   border-bottom: 1px solid #ddd;
   font-size: clamp(14px, 1.5vw, 16px);
+  
 }
 
 .transaction-table th {
@@ -126,10 +177,12 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  
 }
 
 .transaction-table tr:nth-child(even) {
   background-color: #f2f2f2;
+  
 }
 
 .transaction-table tr:hover {

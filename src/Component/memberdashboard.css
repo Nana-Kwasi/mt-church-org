@@ -1,228 +1,201 @@
 /* Global Dashboard Styling */
 .financial-dashboard {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  padding: 1.5rem;
+  padding: 2rem;
   width: 100%;
   max-width: 1400px;
-  margin: 0 auto; /* Center the dashboard instead of negative margin */
+  margin: 0 auto;
+  background-color: var(--background-color);
 }
-  /* Responsive Grid Layout */
- .financial-dashboard .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid */
-    gap: 1rem; /* Reduced gap */
-    margin-bottom: 2rem;
+.label {
+  margin-right: 00px;
 }
 
-  
-  @media (min-width: 768px) {
-    .financial-dashboard .grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  
-  /* Summary Metric Cards */
-
-  
-  .summary-metric:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .summary-metric {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
+/* Main Grid Layout */
+.financial-dashboard .grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.summary-metric-circle {
-    width: 10rem; /* Slightly smaller for better proportions */
-    height: 10rem;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+/* Summary Metrics Container */
+.summary-metrics-container {
+  grid-column: span 4;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-  
-  .summary-metric-circle .amount {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  
-  .summary-metric-circle .label {
-    font-size: 0.875rem;
-    opacity: 0.9;
-   
-  }
-  
-  /* Pie Chart Styling */
-  .chart-container {
-    padding: 1rem;
-    margin: 1rem 0;
-    width: 100%;
+/* Summary Metric Styling */
+.summary-metric {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+  margin-left: 100px;
 }
+
+
+ /* Summary Metric Styling */
+ .summary-metric-circle {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column; /* Stack content vertically */
+  justify-content: center;
+  align-items: center;
+  color: white;
+  position: relative;
   
-  .chart-title {
-    text-align: center;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 1rem;
-  }
-  
-  /* Transaction Table Styling */
-  .transaction-table-container {
-    max-height: 400px;
-    width: 100%;
-    margin: 0 auto; /* Center the table */
-    padding: 0 1rem; /* Consistent padding */
-    overflow-x: auto; /* Handle horizontal overflow */
+}
+
+.summary-metric-circle .amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0; /* Remove unnecessary margin */
+  z-index: 1; /* Ensure it stays above background or other elements */
+}
+
+.summary-metric-circle .label {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem; /* Add space between amount and label */
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle background */
+  padding: 0.25rem 0;
+  border-radius: 4px; /* Optional for rounded background corners */
+  z-index: 1; /* Ensure visibility */
+}
+
+/* Charts Layout */
+.charts-container {
+  grid-column: span 4;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  margin-left: 120px;
+  max-width: calc(100% - 140px);
+}
+
+.chart-container {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  height: 100px; */
+}
+
+.chart-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Transaction Table Styling */
+.transaction-table-container {
+  grid-column: span 4;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin: 0;
+  margin-left: 140px;
+  width: calc(100% - 140px);
 }
 
 .transaction-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    margin: 1rem 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
 }
-  /* Rest of the styles remain unchanged */
-  .transaction-table thead {
-    background: linear-gradient(to right, #f1f5f9, #e2e8f0);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+
+.transaction-table thead {
+  background: linear-gradient(to right, #f1f5f9, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.transaction-table th {
+  padding: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.transaction-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+    margin-left: 60px;
+    max-width: calc(100% - 80px);
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+
+  .transaction-table-container {
+    margin-left: 60px;
+    width: calc(100% - 80px);
+  }
+}
+
+@media (max-width: 768px) {
+  .financial-dashboard {
+    padding: 1rem;
+  }
+  
+  .summary-metrics-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .summary-metric-circle {
+    width: 6rem;
+    height: 6rem;
+  }
+  
+  .transaction-table-container {
+    padding: 1rem;
+    margin-left: 30px;
+    width: calc(100% - 40px);
+  }
+
+  .charts-container {
+    margin-left: 30px;
+    max-width: calc(100% - 40px);
   }
   
   .transaction-table th,
   .transaction-table td {
-    padding: 0.75rem 1rem;
-    text-align: center;
-    transition: all 0.3s ease;
-  }
-  
-  .transaction-table th {
-    font-weight: 600;
-    color: #2c3e50;
-    text-transform: uppercase;
+    padding: 0.75rem;
     font-size: 0.875rem;
-    letter-spacing: 0.5px;
   }
-  
-  .transaction-table tbody tr {
-    border-bottom: 1px solid #f0f4f8;
-    transition: all 0.3s ease;
-  }
-  
-  .transaction-table tbody tr:hover {
-    background-color: #f8fafc;
-    transform: scale(1.01);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  /* Alternating Row Colors */
-  .transaction-table tbody tr:nth-child(even) {
-    background-color: #f9fafb;
-  }
-  
-  .transaction-table tbody tr:nth-child(odd) {
-    background-color: white;
-  }
-  
-  /* Amount Column Styling */
-  .transaction-table .amount-column {
-    font-weight: 600;
-    color: #1a202c;
-  }
-  
-  .transaction-table .positive-amount {
-    color: #48bb78;
-  }
-  
-  .transaction-table .negative-amount {
-    color: #f56565;
-  }
-  
-  /* Payment Type Styling */
-  .transaction-table .payment-type {
-    font-weight: 500;
-    text-transform: capitalize;
-    padding: 4px 8px;
-    border-radius: 4px;
-  }
-  
-  .transaction-table .payment-type-cash {
-    background-color: #e6f3ee;
-    color: #2f855a;
-  }
-  
-  .transaction-table .payment-type-online {
-    background-color: #e8f4fd;
-    color: #2b6cb0;
-  }
-  
-  .transaction-table .payment-type-cheque {
-    background-color: #f7f0f5;
-    color: #744210;
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .transaction-table-container {
-      margin-right: 1rem;
-      width: 100%;
-    }
-  
-    .transaction-table {
-      font-size: 0.875rem;
-    }
-  
-    .transaction-table th,
-    .transaction-table td {
-      padding: 0.5rem;
-    }
-  }
-  /* Loading and Empty States */
-  .transaction-table-empty {
-    text-align: center;
-    padding: 2rem;
-    color: #718096;
-    font-style: italic;
-  }
-  /* Loading and Error States */
-  .loading-state,
-  .error-state {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 300px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  }
-  
-  .loading-state {
-    color: #3b82f6;
-  }
-  
-  .error-state {
-    color: #ef4444;
-    font-weight: 500;
-  }
-  
-  /* Color Palette */
-  :root {
-    --primary-color: #3b82f6;
-    --secondary-color: #10b981;
-    --background-color: #f4f7fa;
-    --text-color: #2c3e50;
-    --border-color: #e2e8f0;
-  }
+}
+
+/* Color Variables */
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #10b981;
+  --background-color: #f4f7fa;
+  --text-color: #2c3e50;
+  --border-color: #e2e8f0;
+}

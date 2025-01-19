@@ -59,6 +59,7 @@
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-left: 160px;
 }
 
 .back-button:hover {
@@ -96,7 +97,27 @@
     padding: 10px; /* Add some spacing */
     gap: 20px; /* Add spacing between components */
   }
+  .download-options {
+    position: relative;
+  }
   
+  .download-dropdown {
+    min-width: 150px;
+  }
+  
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #0b0b0b;
+  }
   .dashboard-title {
     color: gray;
     font-size: 40px;
@@ -107,6 +128,8 @@
   
 .member-details-table {
     animation: fadeIn 0.6s ease forwards;
+    margin-left: 120px;
+    
 }
 .button-container {
   display: flex;
@@ -129,7 +152,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0; /* Remove margin */
+ margin-left: 190px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+.generate-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 70px; /* Reduce circle size */
+  height: 70px; /* Reduce circle size */
+  font-size: 0.8rem; /* Adjust font size */
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ margin-right: 150px;
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
@@ -148,6 +187,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+   
   }
   
   .modal-content {
@@ -241,6 +281,8 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-left: 130px;
+  width: 100%;
 }
 
 .report-header {

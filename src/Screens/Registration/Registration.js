@@ -1,124 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDocs, collection, query, where, addDoc } from "firebase/firestore";
 import app from "../../Component/Config/Config";
 import { v4 as uuidv4 } from 'uuid';
 import "../../registration.css";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
-
 const Registration = () => {
   const db = getFirestore(app);
+  
+  // Initial constants
+  const INITIAL_TITLES = [
+    "Mr.", "Mrs.", "Miss", "Dr.", "Rev.", "Prof.", "Madam", "Nana"
+  ];
+
+  const INITIAL_EMPLOYMENT_STATUSES = [
+    "Employed", "Self-Employed", "Unemployed", "Student", "Retired"
+  ];
+
+  const INITIAL_GHANA_REGIONS = [
+    "Ahafo Region", "Ashanti Region", "Bono East Region", "Bono Region",
+    "Central Region", "Eastern Region", "Greater Accra Region", "North East Region",
+    "Northern Region", "Oti Region", "Savannah Region", "Upper East Region",
+    "Upper West Region", "Volta Region", "Western North Region", "Western Region"
+  ];
+
+  const INITIAL_ORGANISATIONS = [
+    "Mens Fellowship", "Choir", "Christ Little Band", "Singing Band", 
+    "Guild", "Girls Fellowship", "Youth Fellowship", "Gospel Band",
+    "Women's Fellowship", "Brigade", "Digital Team"
+  ];
+
+  const INITIAL_ROLES = [
+    "Class Leader", "Usher", "Leader", "Organisation Executive",
+    "Assistant Class Leader", "Poor Fund Steward", "Lay Movement Executive",
+    "Church Member", "Care Taker", "Steward", "Chapel Steward"
+  ];
+
+  const INITIAL_MEMBERSHIP_TYPES = [
+    "Catechumens", "Full Member", "Distance", "Invalid"
+  ];
+
+  const INITIAL_CLASS_OPTIONS = [
+    "Class 1", "Class 2", "Class 3", "Class 4", "Class 5"
+  ];
+
+  const CLASS_LEADERS = [
+    "Naomi Eshun", "De-Graft Yamoah", "Stephen Boadi",
+    "Joel Yamoah", "Victoria Mensah"
+  ];
+
+  const ASSISTANT_CLASS_LEADERS = [
+    "Esther Kotey", "Anabella Yamoah", "Mercy Arhur",
+    "Beatrice Arhin", "Ebenezer Saah"
+  ];
+
+  const CHILD_CLASS_OPTIONS = [
+    "Beginners", "Primary", "Timothy"
+  ];
+
+  const CHILD_ORGANISATIONS = [
+    "MYF", "MGF", "Bridge", "Junior Choir"
+  ];
+
+  // State declarations
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showChildModal, setShowChildModal] = useState(false);
   const [parentsList, setParentsList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [childFormData, setChildFormData] = useState({
-    name: '',
-    dob: '',
-    age: '',
-    class: '',
-    organisation: '',
-    parentId: ''
+
+  const [dynamicOptions, setDynamicOptions] = useState({
+    titles: INITIAL_TITLES,
+    employmentStatuses: INITIAL_EMPLOYMENT_STATUSES,
+    regions: INITIAL_GHANA_REGIONS,
+    organisations: INITIAL_ORGANISATIONS,
+    roles: INITIAL_ROLES,
+    membershipTypes: INITIAL_MEMBERSHIP_TYPES,
+    classOptions: INITIAL_CLASS_OPTIONS
   });
 
-  const TITLES = [
-    "Mr.",
-    "Mrs.",
-    "Miss",
-    "Dr.",
-    "Rev.",
-    "Prof.",
-    "Madam",
-    "Nana"
-  ];
+  const [showNewOption, setShowNewOption] = useState({
+    titles: false,
+    employmentStatuses: false,
+    regions: false,
+    organisations: false,
+    roles: false,
+    membershipTypes: false,
+    classOptions: false
+  });
 
-  const EMPLOYMENT_STATUSES = [
-    "Employed",
-    "Self-Employed",
-    "Unemployed",
-    "Student",
-    "Retired"
-  ];
-
-  const GHANA_REGIONS = [
-    "Ahafo Region",
-    "Ashanti Region",
-    "Bono East Region",
-    "Bono Region",
-    "Central Region",
-    "Eastern Region",
-    "Greater Accra Region",
-    "North East Region",
-    "Northern Region",
-    "Oti Region",
-    "Savannah Region",
-    "Upper East Region",
-    "Upper West Region",
-    "Volta Region",
-    "Western North Region",
-    "Western Region"
-  ];
-
-  const ORGANISATIONS = [
-    "Mens Fellowship",
-    "Choir",
-    "Christ Little Band", 
-    "Singing Band", 
-    "Guild",
-    "Girls Fellowship", 
-    "Youth Fellowship", 
-    "Gospel Band",
-    "Women's Fellowship",
-    "Brigade", 
-    "Digital Team"
-  ];
-
-  const ROLES = [
-    "Class Leader",
-    "Usher",
-    "Leader",
-    "Organisation Executive",
-    "Assistant Class Leader",
-    "Poor Fund Steward",
-    "Lay Movement Executive",
-    "Church Member",
-    "Care Taker",
-    "Steward",
-    "Chapel Steward"
-  ];
-
-  const MEMBERSHIP_TYPES = [
-    "Catechumens",
-    "Full Member",
-    "Distance",
-    "Invalid"
-  ];
-
-  const CLASS_OPTIONS = [
-    "Class 1",
-    "Class 2", 
-    "Class 3", 
-    "Class 4", 
-    "Class 5"
-  ];
-
-  const CLASS_LEADERS = [
-    "Naomi Eshun",
-    "De-Graft Yamoah", 
-    "Stephen Boadi",
-    "Joel Yamoah",
-    "Victoria Mensah",
-  ];
-
-  const ASSISTANT_CLASS_LEADERS = [
-    "Esther Kottey",
-    "Anabella Yamoah",
-    "Mercy Arhur",
-    "Beatrice Arhin",
-    "Ebenezer Saah"
-  ];
+  const [newOption, setNewOption] = useState({
+    titles: '',
+    employmentStatuses: '',
+    regions: '',
+    organisations: '',
+    roles: '',
+    membershipTypes: '',
+    classOptions: ''
+  });
 
   const [formData, setFormData] = useState({
     title: '',
@@ -143,23 +123,62 @@ const Registration = () => {
     assignClassLeader: '',
     assignAssistantClassLeader: ''
   });
-  const CHILD_CLASS_OPTIONS = [
-    "Beginners",
-    "Primary",
-    "Timothy"
-  ];
 
-  const CHILD_ORGANISATIONS = [
-    "MYF",
-    "MGF",
-    "Bridge",
-    "Junior Choir"
-  ];
+  const [childFormData, setChildFormData] = useState({
+    name: '',
+    dob: '',
+    age: '',
+    class: '',
+    organisation: '',
+    parentId: ''
+  });
 
+  // Effect to fetch parents on component mount
   useEffect(() => {
     fetchParents();
   }, []);
 
+  // Effect to fetch options from Firestore
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const categories = [
+          'titles', 'employmentStatuses', 'regions', 
+          'organisations', 'roles', 'membershipTypes', 'classOptions'
+        ];
+
+        for (const category of categories) {
+          const querySnapshot = await getDocs(collection(db, `options_${category}`));
+          const options = querySnapshot.docs.map(doc => doc.data().value);
+          
+          if (options.length > 0) {
+            setDynamicOptions(prev => ({
+              ...prev,
+              [category]: [...new Set([...prev[category], ...options])]
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+  // Utility function to calculate age
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Function to fetch parents
   const fetchParents = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "Members"));
@@ -174,41 +193,7 @@ const Registration = () => {
     }
   };
 
-  const handleChildChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'dob') {
-      const age = calculateAge(value);
-      setChildFormData(prev => ({ ...prev, [name]: value, age }));
-    } else {
-      setChildFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleChildSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const selectedParent = parentsList.find(parent => parent.id === childFormData.parentId);
-      const documentId = uuidv4();
-      await setDoc(doc(db, "Children", documentId), {
-        ...childFormData,
-        parentName: selectedParent ? `${selectedParent.firstName} ${selectedParent.lastName}` : '',
-        registrationDate: new Date().toISOString()
-      });
-      alert('Child registered successfully!');
-      setChildFormData({
-        name: '',
-        dob: '',
-        age: '',
-        class: '',
-        organisation: '',
-        parentId: ''
-      });
-      setShowChildModal(false);
-    } catch (error) {
-      console.error("Error registering child:", error);
-      alert('Failed to register child');
-    }
-  };
+  // Handle form changes
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
@@ -247,17 +232,42 @@ const Registration = () => {
     }
   };
 
-  const calculateAge = (dob) => {
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  // Handle child form changes
+  const handleChildChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'dob') {
+      const age = calculateAge(value);
+      setChildFormData(prev => ({ ...prev, [name]: value, age }));
+    } else {
+      setChildFormData(prev => ({ ...prev, [name]: value }));
     }
-    return age;
   };
 
+  // Handle adding new options
+  const handleAddOption = async (category) => {
+    if (!newOption[category].trim()) return;
+
+    try {
+      const optionsCollection = collection(db, `options_${category}`);
+      await addDoc(optionsCollection, {
+        value: newOption[category].trim(),
+        timestamp: new Date()
+      });
+
+      setDynamicOptions(prev => ({
+        ...prev,
+        [category]: [...prev[category], newOption[category].trim()]
+      }));
+
+      setNewOption(prev => ({ ...prev, [category]: '' }));
+      setShowNewOption(prev => ({ ...prev, [category]: false }));
+    } catch (error) {
+      console.error(`Error adding ${category} option:`, error);
+      setError(`Failed to add new ${category} option`);
+    }
+  };
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -329,6 +339,75 @@ const Registration = () => {
     }
   };
 
+  // Handle child form submission
+  const handleChildSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const selectedParent = parentsList.find(parent => parent.id === childFormData.parentId);
+      const documentId = uuidv4();
+      await setDoc(doc(db, "Children", documentId), {
+        ...childFormData,
+        parentName: selectedParent ? `${selectedParent.firstName} ${selectedParent.lastName}` : '',
+        registrationDate: new Date().toISOString()
+      });
+      alert('Child registered successfully!');
+      setChildFormData({
+        name: '',
+        dob: '',
+        age: '',
+        class: '',
+        organisation: '',
+        parentId: ''
+      });
+      setShowChildModal(false);
+    } catch (error) {
+      console.error("Error registering child:", error);
+      alert('Failed to register child');
+    }
+  };
+
+  // Render select with add option functionality
+  const renderSelectWithAdd = (label, name, options, category, required = false) => (
+    <div className="form-group">
+      <label>{label}:</label>
+      <div className="select-with-add">
+        <select
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          required={required}
+        >
+          <option value="">Select {label}</option>
+          {options.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="add-option-button"
+          onClick={() => setShowNewOption(prev => ({ ...prev, [category]: true }))}
+        >
+          +
+        </button>
+      </div>
+      {showNewOption[category] && (
+        <div className="add-option-form">
+          <input
+            type="text"
+            value={newOption[category]}
+            onChange={(e) => setNewOption(prev => ({ ...prev, [category]: e.target.value }))}
+            placeholder={`Enter new ${label.toLowerCase()}`}
+          />
+          <button
+            type="button"
+            onClick={() => handleAddOption(category)}
+          >
+            Add
+          </button>
+        </div>
+      )}
+    </div>
+  );
   return (
     <div className="registration-screen">
       
@@ -461,13 +540,8 @@ const Registration = () => {
       )}
       <form className="registration-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Title:</label>
-          <select name="title" value={formData.title} onChange={handleChange}>
-            <option value="">Select Title</option>
-            {TITLES.map(title => (
-              <option key={title} value={title}>{title}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Title', 'title', dynamicOptions.titles, 'titles')}
+
         </div>
 
         <div className="form-group">
@@ -536,13 +610,8 @@ const Registration = () => {
         </div>
 
         <div className="form-group">
-          <label>Employment Status:</label>
-          <select name="employmentStatus" value={formData.employmentStatus} onChange={handleChange}>
-            <option value="">Select Employment Status</option>
-            {EMPLOYMENT_STATUSES.map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Employment Status', 'employmentStatus', dynamicOptions.employmentStatuses, 'employmentStatuses')}
+
         </div>
 
         <div className="form-group">
@@ -551,13 +620,8 @@ const Registration = () => {
         </div>
 
         <div className="form-group">
-          <label>Home Region:</label>
-          <select name="homeRegion" value={formData.homeRegion} onChange={handleChange}>
-            <option value="">Select Region</option>
-            {GHANA_REGIONS.map(region => (
-              <option key={region} value={region}>{region}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Home Region', 'homeRegion', dynamicOptions.regions, 'regions')}
+
         </div>
 
         <div className="form-group">
@@ -566,17 +630,8 @@ const Registration = () => {
         </div>
 
         <div className="form-group">
-          <label>Membership:</label>
-          <select 
-            name="membership" 
-            value={formData.membership} 
-            onChange={handleChange}
-          >
-            <option value="">Select Membership</option>
-            {MEMBERSHIP_TYPES.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Home Region', 'homeRegion', dynamicOptions.regions, 'regions')}
+
         </div>
 
         <div className="form-group">
@@ -593,23 +648,14 @@ const Registration = () => {
         </div>
 
         <div className="form-group">
-          <label>Role:</label>
-          <select 
-            name="role" 
-            value={formData.role} 
-            onChange={handleChange}
-          >
-            <option value="">Select Role</option>
-            {ROLES.map(role => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Role', 'role', dynamicOptions.roles, 'roles')}
+
         </div>
 
         <div className="form-group">
-          <label>Organisations:</label>
+        <label>Organisations:</label>
           <div className="checkbox-group">
-            {ORGANISATIONS.map(org => (
+            {dynamicOptions.organisations.map(org => (
               <div key={org} className="checkbox-item">
                 <input
                   type="checkbox"
@@ -623,20 +669,35 @@ const Registration = () => {
               </div>
             ))}
           </div>
+          <button
+            type="button"
+            className="add-option-button"
+            onClick={() => setShowNewOption(prev => ({ ...prev, organisations: true }))}
+          >
+            + Add Organisation
+          </button>
+          {showNewOption.organisations && (
+            <div className="add-option-form">
+              <input
+                type="text"
+                value={newOption.organisations}
+                onChange={(e) => setNewOption(prev => ({ ...prev, organisations: e.target.value }))}
+                placeholder="Enter new organisation"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddOption('organisations')}
+              >
+                Add
+              </button>
+            </div>
+          )}
         </div>
+        
 
         <div className="form-group">
-          <label>Assign Class:</label>
-          <select
-            name="assignClass"
-            value={formData.assignClass}
-            onChange={handleChange}
-          >
-            <option value="">Select Class</option>
-            {CLASS_OPTIONS.map(classOption => (
-              <option key={classOption} value={classOption}>{classOption}</option>
-            ))}
-          </select>
+        {renderSelectWithAdd('Assign Class', 'assignClass', dynamicOptions.classOptions, 'classOptions')}
+
         </div>
 
         {formData.assignClass && (

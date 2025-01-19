@@ -118,155 +118,157 @@ const MemberFinancialDashboard = ({ memberId }) => {
 
   const todayTotals = getCurrentDayTotal();
   const totalContributions = getTotalContributions();
-
   return (
     <div className="financial-dashboard">
-      <div className="grid">  
-        {/* Current Day Totals */}
-        <div className="summary-metric">
-          <div className="summary-metric-circle" style={{backgroundColor: '#3b82f6'}}>
-            <div className="flex flex-col items-center justify-center w-full h-full">
-              {Object.entries(todayTotals).map(([currency, amount]) => (
-                <div key={currency} className="text-center">
-                  <span className="text-xs font-bold">{currency}</span>
-                  <span className="block text-sm">{amount.toFixed(2)}</span>
-                </div>
-              ))}
-              <span className="text-xs absolute bottom-1 left-0 right-0 text-center">Today's Transactions</span>
+      <div className="grid">
+        {/* Summary Metrics Section */}
+        <div className="summary-metrics-container">
+          {/* Today's Transactions */}
+          <div className="summary-metric">
+            <div className="summary-metric-circle" style={{ backgroundColor: '#3b82f6' }}>
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                {Object.entries(todayTotals).map(([currency, amount]) => (
+                  <div key={currency} className="text-center">
+                    <span className="amount">{amount.toFixed(2)}</span>
+                    <span className="text-sm font-bold">{currency}</span>
+                  </div>
+                ))}
+                <span className="label">Today</span>
+              </div>
+            </div>
+          </div>
+  
+          {/* Total Contributions */}
+          <div className="summary-metric">
+            <div className="summary-metric-circle" style={{ backgroundColor: '#10b981' }}>
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                {Object.entries(totalContributions).map(([currency, amount]) => (
+                  <div key={currency} className="text-center">
+                    <span className="amount">{amount.toFixed(2)}</span>
+                    <span className="text-sm font-bold">{currency}</span>
+                  </div>
+                ))}
+                <span className="label">Monthly</span>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Total Contributions */}
-        <div className="summary-metric">
-          <div className="summary-metric-circle" style={{backgroundColor: '#10b981'}}>
-            <div className="flex flex-col items-center justify-center w-full h-full">
-              {Object.entries(totalContributions).map(([currency, amount]) => (
-                <div key={currency} className="text-center">
-                  <span className="text-xs font-bold">{currency}</span>
-                  <span className="block text-sm">{amount.toFixed(2)}</span>
-                </div>
-              ))}
-              <span className="text-xs absolute bottom-1 left-0 right-0 text-center">Monthly Transactions</span>
-            </div>
+  
+        {/* Charts Section */}
+        <div className="charts-container">
+          {/* Pie Chart */}
+          <div className="chart-container">
+            <h3 className="chart-title">Monthly Contributions Distribution</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={preparePieData()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  label
+                >
+                  {preparePieData().map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`hsl(${index * 60}, 70%, 50%)`} 
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+  
+          {/* Bar Chart */}
+          <div className="chart-container">
+            <h3 className="chart-title">Monthly Contributions Trend</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={preparePieData()}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8">
+                  {preparePieData().map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`hsl(${index * 60}, 70%, 50%)`} 
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Pie Chart */}
-        <div className="chart-container col-span-full">
-          <h3 className="chart-title">Monthly Contributions Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={preparePieData()}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                label
-              >
-                {preparePieData().map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={`hsl(${index * 60}, 70%, 50%)`} 
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Bar Chart */}
-        <div className="chart-container">
-          <h3 className="chart-title">Monthly Contributions Trend</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={preparePieData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#8884d8">
-                {preparePieData().map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={`hsl(${index * 60}, 70%, 50%)`} 
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Monthly Transaction Table */}
-        <div className="col-span-full bg-white p-4 rounded-lg shadow-md">
-          {/* <h3 className="text-lg font-semibold mb-4 text-center">Monthly Transactions</h3> */}
-          <div className="transaction-table-container">
-            <table className="transaction-table">
-              <thead>
+  
+        {/* Transactions Table Section */}
+        <div className="transaction-table-container">
+          <table className="transaction-table">
+            <thead>
+              <tr>
+                <th style={{color:'black'}}>Month/Year</th>
+                <th style={{color:'black'}}>Date</th>
+                <th style={{color:'black'}}>Payment Type</th>
+                <th style={{color:'black'}}>Amount</th>
+                <th style={{color:'black'}}>Currency</th>
+                <th style={{color:'black'}}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyCollections.length === 0 ? (
                 <tr>
-                  <th style={{color:"black"}}>Month/Year</th>
-                  <th style={{color:"black"}}>Date</th>
-                  <th style={{color:"black"}}>Payment Type</th>
-                  <th style={{color:"black"}}>Amount</th>
-                  <th style={{color:"black"}}>Currency</th>
-                  <th style={{color:"black"}}>Total</th>
+                  <td colSpan="6" className="transaction-table-empty">
+                    No transactions found
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {monthlyCollections.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="transaction-table-empty">
-                      No transactions found
-                    </td>
-                  </tr>
-                ) : (
-                  monthlyCollections.map((month, monthIndex) => (
-                    month.transactions.map((transaction, transIndex) => (
-                      <tr key={`${monthIndex}-${transIndex}`}>
-                        {transIndex === 0 && (
-                          <td 
-                            rowSpan={month.transactions.length}
-                            className="font-medium"
-                          >
-                            {month.month}
-                          </td>
-                        )}
-                        <td>{transaction.date}</td>
-                        <td>
-                          <span 
-                            className={`payment-type payment-type-${transaction.paymentType.toLowerCase()}`}
-                          >
-                            {transaction.paymentType}
-                          </span>
-                        </td>
+              ) : (
+                monthlyCollections.map((month, monthIndex) => (
+                  month.transactions.map((transaction, transIndex) => (
+                    <tr key={`${monthIndex}-${transIndex}`}>
+                      {transIndex === 0 && (
                         <td 
-                          className={`amount-column ${
-                            transaction.amount > 0 ? 'positive-amount' : 'negative-amount'
-                          }`}
+                          rowSpan={month.transactions.length}
+                          className="font-medium"
                         >
-                          {transaction.amount.toFixed(2)}
+                          {month.month}
                         </td>
-                        <td>{transaction.currency}</td>
-                        {transIndex === 0 && (
-                          <td 
-                            rowSpan={month.transactions.length}
-                            className="font-bold amount-column"
-                          >
-                            {month.total.toFixed(2)}
-                          </td>
-                        )}
-                      </tr>
-                    ))
+                      )}
+                      <td>{transaction.date}</td>
+                      <td>
+                        <span 
+                          className={`payment-type payment-type-${transaction.paymentType.toLowerCase()}`}
+                        >
+                          {transaction.paymentType}
+                        </span>
+                      </td>
+                      <td 
+                        className={`amount-column ${
+                          transaction.amount > 0 ? 'positive-amount' : 'negative-amount'
+                        }`}
+                      >
+                        {transaction.amount.toFixed(2)}
+                      </td>
+                      <td>{transaction.currency}</td>
+                      {transIndex === 0 && (
+                        <td 
+                          rowSpan={month.transactions.length}
+                          className="font-bold amount-column"
+                        >
+                          {month.total.toFixed(2)}
+                        </td>
+                      )}
+                    </tr>
                   ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
