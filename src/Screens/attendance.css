@@ -37,19 +37,6 @@
 }
 
 
-
-/* .circles-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  /* flex-wrap: wrap;  */
-  /* padding: 0 10px;  */
-  /* border-collapse: separate;
-  overflow: hidden; */
-  /* overflow-x: auto; */
-/* } */
-
-
 .circle-button {
   cursor: pointer;
   background-color: #3498db;
@@ -58,7 +45,7 @@
   border-radius: 25px;
   transition: background-color 0.3s ease;
   margin-right: 140px
-} */
+} 
 .generate-button {
   cursor: pointer;
   background-color: #3498db;
