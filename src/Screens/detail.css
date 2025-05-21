@@ -133,13 +133,13 @@
 }
 .button-container {
   display: flex;
-  justify-content: flex-start; /* Align buttons to the left */
+  justify-content: center; /* Center the buttons */
   align-items: center; /* Align buttons vertically */
   gap: 15px; /* Adjust space between buttons */
   margin-top: 20px; /* Optional: Add space from the top */
 }
 
-.pay-button {
+.pay-button, .generate-button {
   background-color: #007bff;
   color: white;
   border: none;
@@ -152,24 +152,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
- margin-left: 190px;
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
+
+.pay-button {
+  margin-right: 10px; /* Adjust margin to control spacing */
+}
+
 .generate-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 70px; /* Reduce circle size */
-  height: 70px; /* Reduce circle size */
-  font-size: 0.8rem; /* Adjust font size */
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
- margin-right: 150px;
-  transition: transform 0.3s ease, background-color 0.3s ease;
+  margin-left: 10px; /* Adjust margin to control spacing */
 }
 
   .pay-button:hover {
