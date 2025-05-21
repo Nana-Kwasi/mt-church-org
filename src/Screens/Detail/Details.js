@@ -188,6 +188,9 @@
 // };
 
 // export default MemberDetails;
+
+
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, addDoc, collection, getDocs } from "firebase/firestore";
@@ -223,6 +226,7 @@ const MemberDetails = () => {
   const [apiError, setApiError] = useState("");
   const [selectedPaymentType, setSelectedPaymentType] = useState("all");
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+  const [paymentDate, setPaymentDate] = useState(""); // New state for payment date
 
 
 
@@ -293,6 +297,9 @@ const MemberDetails = () => {
     setApiError("");
   
     try {
+      // Determine the timestamp to use (selected date or current date)
+      const paymentTimestamp = paymentDate ? new Date(paymentDate) : new Date();
+      
       // Save payment to Firestore
       const paymentData = {
         memberId: memberId,
@@ -300,7 +307,7 @@ const MemberDetails = () => {
         paymentType: selectedOption,
         currency: selectedCurrency,
         amount: parseFloat(amount),
-        timestamp: new Date(),
+        timestamp: paymentTimestamp,
         comment: selectedOption === "Funeral Contributions" ? comment : ""
       };
   
@@ -311,7 +318,7 @@ const MemberDetails = () => {
   
       // Handle SMS
       if (member.contact) {
-        const message = `Payment Confirmation from Mt Zion Methodist Church\nType: ${selectedOption}\nAmount: ${selectedCurrency} ${amount}\nDate: ${new Date().toLocaleDateString()}\nThank you for your payment.`;
+        const message = `Payment Confirmation from Mt Zion Methodist Church\nType: ${selectedOption}\nAmount: ${selectedCurrency} ${amount}\nDate: ${paymentTimestamp.toLocaleDateString()}\nThank you for your payment.`;
         
         try {
           const smsResult = await sendPaymentSMS(member.contact, message);
@@ -333,6 +340,7 @@ const MemberDetails = () => {
       setSelectedCurrency("");
       setAmount("");
       setComment("");
+      setPaymentDate("");
   
     } catch (error) {
       console.error("Payment Processing Error:", error);
@@ -799,6 +807,16 @@ const MemberDetails = () => {
                   onChange={(e) => setAmount(e.target.value)}
                   className="form-input"
                 />
+                
+                <div className="input-group">
+                  <label>Payment Date (Optional):</label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
                 
                 {selectedOption === "Funeral Contributions" && (
                   <textarea
