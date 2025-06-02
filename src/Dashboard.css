@@ -198,7 +198,54 @@
 .table-section tbody tr:last-child td:last-child {
     border-bottom-right-radius: 8px;
 }
+.icon-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
 
+.icon-stat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1;
+}
+
+.icon-container {
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.stat-data h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.attendance-breakdown, .collections-data {
+  margin-top: 0.5rem;
+}
+
+.attendance-type, .collection-amount {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
     .dashboard {

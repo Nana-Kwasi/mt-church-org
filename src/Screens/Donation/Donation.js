@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import app from "../../Component/Config/Config";
-import "../../donation.css"
+import "../../donation.css";
+
 const COLLECTION_TYPES = [
   "Total Offering",
   "Annual Harvest",
@@ -28,6 +29,8 @@ const Donation = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
   const [collections, setCollections] = useState([{
     type: COLLECTION_TYPES[0],
     amounts: [{ currency: "GH₵", value: "" }]
@@ -69,8 +72,14 @@ const Donation = () => {
     );
   };
 
-  const handleRowClick = (memberId) => {
+  const handleRowClick = (member) => {
+    setSelectedMember(member);
+    setIsMemberModalOpen(true);
+  };
+
+  const handleMakePayment = (memberId) => {
     navigate(`/member-details/${encodeURIComponent(memberId)}`);
+    setIsMemberModalOpen(false);
   };
 
   const handleAddCollection = () => {
@@ -144,6 +153,7 @@ const Donation = () => {
       alert("Error saving collections. Please try again.");
     }
   };
+
   const modalStyles = {
     overlay: {
       position: 'fixed',
@@ -287,6 +297,101 @@ const Donation = () => {
         </div>
       )}
 
+      {isMemberModalOpen && selectedMember && (
+        <div className="member-modal-overlay">
+          <div className="member-modal-content">
+            <div className="member-modal-header">
+              <h2 className="member-modal-title">
+                {selectedMember.firstName} {selectedMember.lastName}
+              </h2>
+            </div>
+            
+            <div className="table-wrapper">
+              <table className="member-details-table">
+                <tbody>
+                  <tr>
+                    <th>Age</th>
+                    <td>{selectedMember.age || "Not Available"}</td>
+                    <th>Contact</th>
+                    <td>{selectedMember.contact || "Not Available"}</td>
+                  </tr>
+                  <tr>
+                    <th>Gender</th>
+                    <td>{selectedMember.gender || "Not Available"}</td>
+                    <th>Class</th>
+                    <td>{selectedMember.assignClass || "Not Available"}</td>
+                    <th>Class Leader</th>
+                    <td>{selectedMember.assignClassLeader || "Not Available"}</td>
+                  </tr>
+                
+
+                   <tr>
+                      <th>Date of Birth</th>
+                       <td>{selectedMember.dob || 
+                       (selectedMember.dateOfBirth?.seconds ? 
+                       new Date(selectedMember.dateOfBirth.seconds * 1000).toLocaleDateString() : 
+                       "Not Available")}</td>
+                      <th>Employment Status</th>
+                      <td>{selectedMember.employmentStatus || "Not Available"}</td>
+                       <th>GPS</th>
+                      <td>{selectedMember.gps || "Not Available"}</td>
+                     </tr>
+                  <tr>
+                    <th>Home Region</th>
+                    <td>{selectedMember.homeRegion || "Not Available"}</td>
+                    <th>Home Town</th>
+                    <td>{selectedMember.homeTown || "Not Available"}</td>
+                    <th>Marital Status</th>
+                    <td>{selectedMember.maritalStatus || "Not Available"}</td>
+                  </tr>
+                  <tr>
+                    <th>Membership</th>
+                    <td>{selectedMember.membership || "Not Available"}</td>
+                    <th>Profession</th>
+                    <td>{selectedMember.profession || "Not Available"}</td>
+                    <th>Role</th>
+                    <td>{selectedMember.role || "Not Available"}</td>
+                  </tr>
+                  {selectedMember.email && (
+                    <tr>
+                      <th>Email</th>
+                      <td colSpan="4">{selectedMember.email}</td>
+                    </tr>
+                  )}
+                  {selectedMember.address && (
+                    <tr>
+                      <th>Address</th>
+                      <td colSpan="4">{selectedMember.address}</td>
+                    </tr>
+                  )}
+                  {selectedMember.membershipDate && (
+                    <tr>
+                      <th>Membership Date</th>
+                      <td colSpan="4">{new Date(selectedMember.membershipDate.seconds * 1000).toLocaleDateString()}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="member-modal-buttons">
+              <button
+                onClick={() => handleMakePayment(selectedMember.id)}
+                className="btn-primary"
+              >
+                Make Payment for Member
+              </button>
+              <button
+                onClick={() => setIsMemberModalOpen(false)}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="search-bar-container">
         <input
           type="text"
@@ -304,16 +409,16 @@ const Donation = () => {
           <table className="members-table">
             <thead>
               <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Contact</th>
+                <th style={{color:'black'}}>First Name</th>
+                <th style={{color:'black'}}>Last Name</th>
+                <th style={{color:'black'}}>Contact</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.map((member) => (
                 <tr
                   key={member.id}
-                  onClick={() => handleRowClick(member.id)}
+                  onClick={() => handleRowClick(member)}
                   className="clickable-row"
                 >
                   <td>{member.firstName || "N/A"}</td>

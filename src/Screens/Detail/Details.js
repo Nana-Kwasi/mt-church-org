@@ -720,48 +720,7 @@ const MemberDetails = () => {
         </button>
       </div>
 
-      <table className="member-details-table">
-        <tbody>
-          <tr>
-            <th>Age</th>
-            <td>{member.age || "Not Available"}</td>
-            <th>Contact</th>
-            <td>{member.contact || "Not Available"}</td>
-          </tr>
-          <tr>
-            <th>Gender</th>
-            <td>{member.gender || "Not Available"}</td>
-            <th>Class</th>
-            <td>{member.assignClass || "Not Available"}</td>
-            <th>Class Leader</th>
-            <td>{member.assignClassLeader || "Not Available"}</td>
-          </tr>
-          <tr>
-            <th>Date of Birth</th>
-            <td>{member.dob || "Not Available"}</td>
-            <th>Employment Status</th>
-            <td>{member.employmentStatus || "Not Available"}</td>
-            <th>GPS</th>
-            <td>{member.gps || "Not Available"}</td>
-          </tr>
-          <tr>
-            <th>Home Region</th>
-            <td>{member.homeRegion || "Not Available"}</td>
-            <th>Home Town</th>
-            <td>{member.homeTown || "Not Available"}</td>
-            <th>Marital Status</th>
-            <td>{member.maritalStatus || "Not Available"}</td>
-          </tr>
-          <tr>
-            <th>Membership</th>
-            <td>{member.membership || "Not Available"}</td>
-            <th>Profession</th>
-            <td>{member.profession || "Not Available"}</td>
-            <th>Role</th>
-            <td>{member.role || "Not Available"}</td>
-          </tr>
-        </tbody>
-      </table>
+     
 
       {renderTransactionTable()}
       
