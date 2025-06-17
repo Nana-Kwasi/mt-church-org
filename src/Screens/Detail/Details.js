@@ -242,9 +242,8 @@ const MemberDetails = () => {
       
       const hubtelEndpoint = 'https://smsc.hubtel.com/v1/messages/send';
       const clientId = 'vxojxzbs';
-      const clientSecret = 'szojhvcz';
+      const clientSecret = 'uznaitfd';
       
-      // Ensure phone number is properly formatted
       const formattedPhone = phoneNumber.replace(/\D/g, '');
       
       const params = new URLSearchParams({
@@ -254,6 +253,7 @@ const MemberDetails = () => {
         to: formattedPhone,
         content: message
       });
+
   
       const url = `${hubtelEndpoint}?${params.toString()}`;
       
@@ -499,51 +499,208 @@ const MemberDetails = () => {
     }
   };
 
-  const downloadExcel = () => {
-    try {
-      const workbook = XLSX.utils.book_new();
+  // const downloadExcel = () => {
+  //   try {
+  //     const workbook = XLSX.utils.book_new();
       
-      // Prepare data for Excel
-      const excelData = transactions.map((transaction, index) => ({
-        "#": index + 1,
-        "Member Name": transaction.memberName,
-        "Payment Type": transaction.paymentType,
-        "Amount": transaction.amount,
-        "Currency": transaction.currency,
-        "Date": transaction.formattedDate,
-        "Comment": transaction.comment || "---"
-      }));
+  //     // Prepare data for Excel
+  //     const excelData = transactions.map((transaction, index) => ({
+  //       "#": index + 1,
+  //       "Member Name": transaction.memberName,
+  //       "Payment Type": transaction.paymentType,
+  //       "Amount": transaction.amount,
+  //       "Currency": transaction.currency,
+  //       "Date": transaction.formattedDate,
+  //       "Comment": transaction.comment || "---"
+  //     }));
 
-      // Create worksheet
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
+  //     // Create worksheet
+  //     const worksheet = XLSX.utils.json_to_sheet(excelData);
       
-      // Add summary section
-      const summaryData = [
-        ["Summary by Currency"],
-        ["Currency", "Total"],
-        ...Object.entries(currencyTotals).map(([currency, total]) => [
-          currency,
-          total.toFixed(2)
-        ])
-      ];
+  //     // Add summary section
+  //     const summaryData = [
+  //       ["Summary by Currency"],
+  //       ["Currency", "Total"],
+  //       ...Object.entries(currencyTotals).map(([currency, total]) => [
+  //         currency,
+  //         total.toFixed(2)
+  //       ])
+  //     ];
 
-      // Add empty row and summary
-      XLSX.utils.sheet_add_aoa(worksheet, [[""], ["Report Summary"]], {
-        origin: -1
-      });
-      XLSX.utils.sheet_add_aoa(worksheet, summaryData, { origin: -1 });
+  //     // Add empty row and summary
+  //     XLSX.utils.sheet_add_aoa(worksheet, [[""], ["Report Summary"]], {
+  //       origin: -1
+  //     });
+  //     XLSX.utils.sheet_add_aoa(worksheet, summaryData, { origin: -1 });
 
-      // Add to workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Financial Report");
+  //     // Add to workbook
+  //     XLSX.utils.book_append_sheet(workbook, worksheet, "Financial Report");
 
-      // Save file
-      XLSX.writeFile(workbook, `${getFullName()}_Financial_Report.xlsx`);
-    } catch (error) {
-      console.error("Error in Excel generation:", error);
-      alert("Error generating Excel file. Please try again.");
+  //     // Save file
+  //     XLSX.writeFile(workbook, `${getFullName()}_Financial_Report.xlsx`);
+  //   } catch (error) {
+  //     console.error("Error in Excel generation:", error);
+  //     alert("Error generating Excel file. Please try again.");
+  //   }
+  // };
+const downloadExcel = () => {
+  try {
+    const workbook = XLSX.utils.book_new();
+    
+    // Create report header information
+    const reportInfo = [
+      [`Financial Report for ${getFullName()}`],
+      [`Period: ${reportDateRange.start?.toLocaleDateString()} to ${reportDateRange.end?.toLocaleDateString()}`],
+      [`Generated on: ${new Date().toLocaleString()}`],
+      [`Payment Type Filter: ${selectedPaymentType === "all" ? "All Payment Types" : selectedPaymentType}`],
+      [`Total Transactions: ${transactions.length}`],
+      [], // Empty row for spacing
+    ];
+
+    // Prepare transaction data with separate currency column
+    const transactionData = [
+      ["#", "Member Name", "Payment Type", "Amount", "Currency", "Date", "Comment"]
+    ];
+    
+    transactions.forEach((transaction, index) => {
+      transactionData.push([
+        index + 1,
+        transaction.memberName,
+        transaction.paymentType,
+        transaction.amount.toFixed(2), // Amount as number without currency
+        transaction.currency, // Separate currency column
+        transaction.formattedDate,
+        transaction.comment || "---"
+      ]);
+    });
+
+    // Add empty rows for spacing
+    transactionData.push([]);
+    transactionData.push([]);
+
+    // Calculate grand total by converting all currencies to a base currency (you might want to add exchange rates)
+    let grandTotalSection = [
+      ["SUMMARY BY CURRENCY"],
+      ["Currency", "Total Amount", "Transaction Count"]
+    ];
+
+    let overallTransactionCount = 0;
+    Object.entries(currencyTotals).forEach(([currency, total]) => {
+      const currencyTransactionCount = transactions.filter(t => t.currency === currency).length;
+      overallTransactionCount += currencyTransactionCount;
+      
+      grandTotalSection.push([
+        currency,
+        total.toFixed(2),
+        currencyTransactionCount
+      ]);
+    });
+
+    // Add grand total row
+    grandTotalSection.push([]);
+    grandTotalSection.push(["GRAND TOTAL", "", overallTransactionCount]);
+
+    // Combine all data
+    const allData = [
+      ...reportInfo,
+      ...transactionData,
+      ...grandTotalSection
+    ];
+
+    // Create worksheet from the combined data
+    const worksheet = XLSX.utils.aoa_to_sheet(allData);
+
+    // Set column widths for better presentation
+    const columnWidths = [
+      { wch: 5 },   // # column
+      { wch: 20 },  // Member Name
+      { wch: 18 },  // Payment Type
+      { wch: 12 },  // Amount
+      { wch: 10 },  // Currency
+      { wch: 15 },  // Date
+      { wch: 25 }   // Comment
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Style the headers and important sections
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    
+    // Style report title (first row)
+    if (worksheet['A1']) {
+      worksheet['A1'].s = {
+        font: { bold: true, sz: 16 },
+        alignment: { horizontal: 'center' }
+      };
     }
-  };
 
+    // Find and style the transaction table headers
+    let headerRowIndex = -1;
+    for (let i = 0; i <= range.e.r; i++) {
+      const cellRef = XLSX.utils.encode_cell({ r: i, c: 0 });
+      if (worksheet[cellRef] && worksheet[cellRef].v === "#") {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    if (headerRowIndex !== -1) {
+      // Style header row
+      for (let col = 0; col <= 6; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+        if (worksheet[cellRef]) {
+          worksheet[cellRef].s = {
+            font: { bold: true },
+            fill: { fgColor: { rgb: "4472C4" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: 'center' }
+          };
+        }
+      }
+    }
+
+    // Style summary section headers
+    for (let i = 0; i <= range.e.r; i++) {
+      const cellRef = XLSX.utils.encode_cell({ r: i, c: 0 });
+      if (worksheet[cellRef] && 
+          (worksheet[cellRef].v === "SUMMARY BY CURRENCY" || 
+           worksheet[cellRef].v === "GRAND TOTAL")) {
+        worksheet[cellRef].s = {
+          font: { bold: true, sz: 12 },
+          fill: { fgColor: { rgb: "E7E6E6" } }
+        };
+      }
+    }
+
+    // Format amount columns as numbers
+    transactions.forEach((_, index) => {
+      const amountCellRef = XLSX.utils.encode_cell({ 
+        r: headerRowIndex + 1 + index, 
+        c: 3 
+      });
+      if (worksheet[amountCellRef]) {
+        worksheet[amountCellRef].t = 'n'; // Set as number type
+        worksheet[amountCellRef].z = '#,##0.00'; // Number format
+      }
+    });
+
+    // Add the worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Financial Report");
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `${getFullName()}_Financial_Report_${timestamp}.xlsx`;
+    
+    // Save file
+    XLSX.writeFile(workbook, filename);
+    
+    // Optional: Show success message
+    alert(`Excel report downloaded successfully as ${filename}`);
+    
+  } catch (error) {
+    console.error("Error in Excel generation:", error);
+    alert("Error generating Excel file. Please try again.");
+  }
+};
   const getFullName = () => {
     if (!member) return "N/A";
     const nameParts = [];

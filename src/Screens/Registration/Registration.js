@@ -629,10 +629,7 @@ const Registration = () => {
           <input type="text" name="homeTown" value={formData.homeTown} onChange={handleChange} />
         </div>
 
-        <div className="form-group">
-        {renderSelectWithAdd('Home Region', 'homeRegion', dynamicOptions.regions, 'regions')}
-
-        </div>
+        
 
         <div className="form-group">
           <label>Class:</label>
