@@ -5,11 +5,14 @@
   max-width: 1400px;
   margin: 0 auto;
   background-color: var(--background-color);
-}
-.label {
-  margin-right: 00px;
+  margin-left: 220px; /* Account for sidebar width */
+  width: calc(100% - 220px); /* Subtract sidebar width */
+  box-sizing: border-box;
 }
 
+.label {
+  margin-right: 10px;
+}
 
 .financial-dashboard .grid {
   display: grid;
@@ -18,15 +21,14 @@
   margin-bottom: 2rem;
 }
 
-
 .summary-metrics-container {
   grid-column: span 4;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
 }
-
 
 .summary-metric {
   background: white;
@@ -34,12 +36,11 @@
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease;
-  margin-left: 100px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-
-
- .summary-metric-circle {
+.summary-metric-circle {
   width: 8rem;
   height: 8rem;
   border-radius: 50%;
@@ -50,7 +51,6 @@
   align-items: center;
   color: white;
   position: relative;
-  
 }
 
 .summary-metric-circle .amount {
@@ -71,22 +71,21 @@
   z-index: 1; 
 }
 
-
 .charts-container {
   grid-column: span 4;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
-  margin-left: 120px;
-  max-width: calc(100% - 140px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chart-container {
   background: white;
   border-radius: 1rem;
   padding: 1rem;
- 
+  box-sizing: border-box;
 }
 
 .chart-title {
@@ -103,10 +102,10 @@
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
+  width: 100%;
+  box-sizing: border-box;
   margin: 0;
-  margin-left: 140px;
-  width: calc(100% - 140px);
 }
 
 .transaction-table {
@@ -114,6 +113,7 @@
   border-collapse: separate;
   border-spacing: 0;
   margin: 0;
+  min-width: 600px; /* Minimum width to prevent cramping */
 }
 
 .transaction-table thead {
@@ -131,37 +131,51 @@
   font-size: 0.875rem;
   text-align: left;
   border-bottom: 2px solid var(--border-color);
+  white-space: nowrap; /* Prevent text wrapping in headers */
 }
 
 .transaction-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
+  white-space: nowrap; /* Prevent text wrapping in cells */
 }
 
+/* Tablet styles */
 @media (max-width: 1200px) {
+  .financial-dashboard {
+    margin-left: 180px;
+    width: calc(100% - 180px);
+    padding: 1.5rem;
+  }
+  
   .charts-container {
     grid-template-columns: 1fr;
-    margin-left: 60px;
-    max-width: calc(100% - 80px);
   }
   
   .chart-container {
     height: 300px;
   }
-
-  .transaction-table-container {
-    margin-left: 60px;
-    width: calc(100% - 80px);
+  
+  .summary-metrics-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
 
+/* Mobile styles */
 @media (max-width: 768px) {
   .financial-dashboard {
+    margin-left: 0;
+    width: 100%;
     padding: 1rem;
   }
   
   .summary-metrics-container {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .summary-metric {
+    padding: 1rem;
   }
   
   .summary-metric-circle {
@@ -171,19 +185,51 @@
   
   .transaction-table-container {
     padding: 1rem;
-    margin-left: 30px;
-    width: calc(100% - 40px);
+    border-radius: 0.5rem;
   }
-
-  .charts-container {
-    margin-left: 30px;
-    max-width: calc(100% - 40px);
+  
+  .transaction-table {
+    min-width: 500px; /* Smaller minimum width for mobile */
   }
   
   .transaction-table th,
   .transaction-table td {
-    padding: 0.75rem;
+    padding: 0.75rem 0.5rem;
     font-size: 0.875rem;
+  }
+  
+  .chart-container {
+    padding: 0.75rem;
+  }
+  
+  .chart-title {
+    font-size: 1rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .financial-dashboard {
+    padding: 0.5rem;
+  }
+  
+  .summary-metrics-container {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .transaction-table {
+    min-width: 400px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .transaction-table-container {
+    padding: 0.75rem;
   }
 }
 

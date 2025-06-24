@@ -809,7 +809,7 @@ const downloadExcel = () => {
           </div>
         </div>
 
-        <div className="currency-summary">
+       <div className="currency-summary">
           <h3 className="text-xl font-semibold mb-2">Summary by Currency</h3>
           <div className="currency-totals">
             {Object.entries(currencyTotals).map(([currency, total]) => (
@@ -850,179 +850,218 @@ const downloadExcel = () => {
       </div>
     );
   };
-
-  return (
-    <div className="member-details">
-      <div className="row-container">
-        <button onClick={() => navigate(-1)} className="back-button">
-          Back
-        </button>
-        <h3 className="dashboard-title">{getFullName()} Dashboard</h3>
-      </div>
-      
-      <div className="button-container">
-        <button
-          className="pay-button"
-          style={{ backgroundColor: "#007bff" }}
-          onClick={() => setShowPayModal(true)}
+return (
+  <div className="member-details">
+    <div className="row-container">
+      <button onClick={() => navigate(-1)} className="back-button">
+        Back
+      </button>
+      <h3 className="dashbo ard-title">{getFullName()} Dashboard</h3>
+    </div>
+    
+    {/* Profile Image Section */}
+    <div className="profile-image-container" style={{
+      display: 'flex',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      marginBottom: '20px',
+      paddingRight: '20px'
+    }}>
+      {member?.profileImage ? (
+        <img 
+          src={member.profileImage} 
+          alt={`${member.firstName} ${member.lastName}`}
+          style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '1px solid rgb(159, 22, 118)',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+          }}
+        />
+      ) : (
+        <div 
+          style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            backgroundColor: '#f8f9fa',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '4px solid #007bff',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#007bff'
+          }}
         >
-          Pay
-        </button>
-        <button
-          className="generate-button"
-          style={{ backgroundColor: "#ff4b5c" }}
-          onClick={() => setShowReportModal(true)}
-        >
-          Generate Report
-        </button>
-      </div>
-
-     
-
-      {renderTransactionTable()}
-      
-      <div className="financial-section mt-6">
-        <h2 className="text-2xl font-bold mb-4">Financial Overview</h2>
-        <MemberFinancialDashboard memberId={memberId} />
-      </div>
-
-      {showPayModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Make a Payment</h2>
-            {apiError && <div className="error-message">{apiError}</div>}
-            <select
-              value={selectedOption}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              className="form-select"
-            >
-              <option value="">Select Payment Type</option>
-              <option value="Tithe">Tithe</option>
-              <option value="Welfare">Welfare</option>
-              <option value="Funeral Contributions">Funeral Contributions</option>
-              <option value="Special Offerings">Special Offerings</option>
-            </select>
-            
-            {selectedOption && (
-              <>
-                <select
-                  value={selectedCurrency}
-                  onChange={(e) => setSelectedCurrency(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="">Select Currency</option>
-                  <option value="USD">USD</option>
-                  <option value="GHS">GHS</option>
-                  <option value="EUR">EUR</option>
-                </select>
-                
-                <input
-                  type="number"
-                  placeholder="Enter Amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="form-input"
-                />
-                
-                <div className="input-group">
-                  <label>Payment Date (Optional):</label>
-                  <input
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-                
-                {selectedOption === "Funeral Contributions" && (
-                  <textarea
-                    placeholder="Add a comment"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="form-textarea"
-                  />
-                )}
-                
-                <button
-                  onClick={handlePay}
-                  className="modal-pay-button"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? "Processing..." : "Pay"}
-                </button>
-              </>
-            )}
-            
-            <button
-              onClick={() => setShowPayModal(false)}
-              className="modal-close-button"
-            >
-              Close
-            </button>
-          </div>
+          {member?.firstName ? member.firstName.charAt(0).toUpperCase() : '?'}
+          {member?.lastName ? member.lastName.charAt(0).toUpperCase() : ''}
         </div>
       )}
-
-      {showReportModal && (
-         <div className="modal">
-         <div className="modal-content">
-           <h2>Generate Report</h2>
-           <div className="date-inputs">
-             <div className="input-group">
-               <label>Start Date:</label>
-               <input
-                 type="date"
-                 value={startDate}
-                 onChange={(e) => setStartDate(e.target.value)}
-                 className="form-input"
-               />
-             </div>
-             <div className="input-group">
-               <label>End Date:</label>
-               <input
-                 type="date"
-                 value={endDate}
-                 onChange={(e) => setEndDate(e.target.value)}
-                 className="form-input"
-               />
-             </div>
-             <div className="input-group">
-               <label>Payment Type:</label>
-               <select
-                 value={selectedPaymentType}
-                 onChange={(e) => setSelectedPaymentType(e.target.value)}
-                 className="form-select"
-               >
-                 <option value="all">All Payment Types</option>
-                 <option value="Tithe">Tithe</option>
-                 <option value="Welfare">Welfare</option>
-                 <option value="Funeral Contributions">Funeral Contributions</option>
-                 <option value="Special Offerings">Special Offerings</option>
-               </select>
-             </div>
-           </div>
-           
-           <button
-             onClick={generateReport}
-             className="modal-generate-button"
-             disabled={isProcessing}
-           >
-             {isProcessing ? "Generating..." : "Generate Report"}
-           </button>
-           
-           <button
-             onClick={() => setShowReportModal(false)}
-             className="modal-close-button"
-           >
-             Close
-           </button>
-         </div>
-       </div>
-      )}
-
-      
     </div>
-  );
+    
+    <div className="button-container">
+      <button
+        className="pay-button"
+        style={{ backgroundColor: "#007bff" }}
+        onClick={() => setShowPayModal(true)}
+      >
+        Pay
+      </button>
+      <button
+        className="generate-button"
+        style={{ backgroundColor: "#ff4b5c" }}
+        onClick={() => setShowReportModal(true)}
+      >
+        Generate Report
+      </button>
+    </div>
+
+    {renderTransactionTable()}
+    
+    <div className="financial-section mt-6">
+      <h2 className="text-2xl font-bold mb-4">Financial Overview</h2>
+      <MemberFinancialDashboard memberId={memberId} />
+    </div>
+
+    {showPayModal && (
+      <div className="modal">
+        <div className="modal-content">
+          <h2>Make a Payment</h2>
+          {apiError && <div className="error-message">{apiError}</div>}
+          <select
+            value={selectedOption}
+            onChange={(e) => setSelectedOption(e.target.value)}
+            className="form-select"
+          >
+            <option value="">Select Payment Type</option>
+            <option value="Tithe">Tithe</option>
+            <option value="Welfare">Welfare</option>
+            <option value="Funeral Contributions">Funeral Contributions</option>
+            <option value="Special Offerings">Special Offerings</option>
+          </select>
+          
+          {selectedOption && (
+            <>
+              <select
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
+                className="form-select"
+              >
+                <option value="">Select Currency</option>
+                <option value="USD">USD</option>
+                <option value="GHS">GHS</option>
+                <option value="EUR">EUR</option>
+              </select>
+              
+              <input
+                type="number"
+                placeholder="Enter Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="form-input"
+              />
+              
+              <div className="input-group">
+                <label>Payment Date (Optional):</label>
+                <input
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              
+              {selectedOption === "Funeral Contributions" && (
+                <textarea
+                  placeholder="Add a comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="form-textarea"
+                />
+              )}
+              
+              <button
+                onClick={handlePay}
+                className="modal-pay-button"
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Processing..." : "Pay"}
+              </button>
+            </>
+          )}
+          
+          <button
+            onClick={() => setShowPayModal(false)}
+            className="modal-close-button"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+
+    {showReportModal && (
+       <div className="modal">
+       <div className="modal-content">
+         <h2>Generate Report</h2>
+         <div className="date-inputs">
+           <div className="input-group">
+             <label>Start Date:</label>
+             <input
+               type="date"
+               value={startDate}
+               onChange={(e) => setStartDate(e.target.value)}
+               className="form-input"
+             />
+           </div>
+           <div className="input-group">
+             <label>End Date:</label>
+             <input
+               type="date"
+               value={endDate}
+               onChange={(e) => setEndDate(e.target.value)}
+               className="form-input"
+             />
+           </div>
+           <div className="input-group">
+             <label>Payment Type:</label>
+             <select
+               value={selectedPaymentType}
+               onChange={(e) => setSelectedPaymentType(e.target.value)}
+               className="form-select"
+             >
+               <option value="all">All Payment Types</option>
+               <option value="Tithe">Tithe</option>
+               <option value="Welfare">Welfare</option>
+               <option value="Funeral Contributions">Funeral Contributions</option>
+               <option value="Special Offerings">Special Offerings</option>
+             </select>
+           </div>
+         </div>
+         
+         <button
+           onClick={generateReport}
+           className="modal-generate-button"
+           disabled={isProcessing}
+         >
+           {isProcessing ? "Generating..." : "Generate Report"}
+         </button>
+         
+         <button
+           onClick={() => setShowReportModal(false)}
+           className="modal-close-button"
+         >
+           Close
+         </button>
+       </div>
+     </div>
+    )}
+  </div>
+);
 };
 
 export default MemberDetails;

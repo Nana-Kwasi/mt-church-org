@@ -5,9 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import "../../registration.css";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const Registration = () => {
   const db = getFirestore(app);
+  const storage = getStorage(app);
+
   
   // Initial constants
   const INITIAL_TITLES = [
@@ -69,6 +72,9 @@ const Registration = () => {
   const [showChildModal, setShowChildModal] = useState(false);
   const [parentsList, setParentsList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+const [uploadingImage, setUploadingImage] = useState(false);
 
   const [dynamicOptions, setDynamicOptions] = useState({
     titles: INITIAL_TITLES,
@@ -121,7 +127,8 @@ const Registration = () => {
     organisations: [],
     assignClass: '',
     assignClassLeader: '',
-    assignAssistantClassLeader: ''
+    assignAssistantClassLeader:'',
+    profileImage: '', 
   });
 
   const [childFormData, setChildFormData] = useState({
@@ -132,7 +139,71 @@ const Registration = () => {
     organisation: '',
     parentId: ''
   });
+const handleImageSelect = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB.');
+      return;
+    }
+    
+    setSelectedImage(file);
+    const previewURL = URL.createObjectURL(file);
+    setImagePreview(previewURL);
+  }
+};
 
+const handleImageUpload = async () => {
+  if (!selectedImage) {
+    alert("Please select an image.");
+    return;
+  }
+  
+  const userId = localStorage.getItem('userId');
+  const userName = localStorage.getItem('userName');
+  const userRole = localStorage.getItem('userRole');
+  
+  if (!userId || !userName || !userRole) {
+    alert("You must be logged in to upload images. Please login again.");
+    return;
+  }
+  
+  setUploadingImage(true);
+  try {
+    const imageRef = ref(storage, `member-images/new_${Date.now()}`);
+    const snapshot = await uploadBytes(imageRef, selectedImage);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    setFormData(prev => ({
+      ...prev,
+      profileImage: downloadURL
+    }));
+    
+    setSelectedImage(null);
+    setImagePreview(null);
+    
+    alert("Image uploaded successfully!");
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    alert("Error uploading image. Please try again.");
+  } finally {
+    setUploadingImage(false);
+  }
+};
+
+const removeImage = () => {
+  setFormData(prev => ({
+    ...prev,
+    profileImage: ''
+  }));
+  setSelectedImage(null);
+  setImagePreview(null);
+};
   // Effect to fetch parents on component mount
   useEffect(() => {
     fetchParents();
@@ -329,7 +400,9 @@ const Registration = () => {
         organisations: [],
         assignClass: '',
         assignClassLeader: '',
-        assignAssistantClassLeader: ''
+        assignAssistantClassLeader: '',
+        profileImage: '', 
+
       });
     } catch (error) {
       console.error("Error submitting member data:", error);
@@ -558,7 +631,51 @@ const Registration = () => {
           <label>Last Name:</label>
           <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
         </div>
-
+<div className="form-group">
+  <label>Profile Image:</label>
+  <div className="image-upload-section">
+    {imagePreview || formData.profileImage ? (
+      <div className="image-preview">
+        <img 
+          src={imagePreview || formData.profileImage} 
+          alt="Profile preview" 
+          style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+        />
+        <button
+          type="button"
+          className="remove-image-button"
+          onClick={removeImage}
+        >
+          Remove
+        </button>
+      </div>
+    ) : (
+      <div className="image-upload">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          id="imageInput"
+          style={{ display: 'none' }}
+        />
+        <label htmlFor="imageInput" className="image-upload-label">
+          Upload Profile
+        </label>
+      </div>
+    )}
+    
+    {selectedImage && !formData.profileImage && (
+      <button
+        type="button"
+        className="upload-image-button"
+        onClick={handleImageUpload}
+        disabled={uploadingImage}
+      >
+        {uploadingImage ? 'Uploading...' : 'Upload Image'}
+      </button>
+    )}
+  </div>
+</div>
         <div className="form-group">
           <label>Gender:</label>
           <select name="gender" value={formData.gender} onChange={handleChange} required>
