@@ -45,6 +45,36 @@ const BIRTHDAY_MESSAGES = [
   }
 ];
 // Add this function to handle manual bulk SMS sending
+// const handleManualBirthdaySMS = async () => {
+//   const membersNeedingSMS = birthdayMembers.today.filter(member => 
+//     member.contact && !hasSmsSentToday(member.id)
+//   );
+
+//   if (membersNeedingSMS.length === 0) {
+//     alert('All members with valid phone numbers have already received birthday SMS today!');
+//     return;
+//   }
+
+//   const confirmSend = window.confirm(
+//     `Send birthday SMS to ${membersNeedingSMS.length} member(s) who haven't received it yet?`
+//   );
+
+//   if (confirmSend) {
+//     try {
+//       const results = await sendBirthdaySMSToAll(membersNeedingSMS);
+//       const successCount = results.filter(r => r.success).length;
+//       const failCount = results.length - successCount;
+      
+//       alert(`SMS Results:\n✅ Successfully sent: ${successCount}\n❌ Failed: ${failCount}`);
+      
+//       // Force re-render to update SMS status indicators
+//       setBirthdayMembers(getBirthdayMembers());
+//     } catch (error) {
+//       console.error('Error sending manual birthday SMS:', error);
+//       alert('Error sending SMS. Please try again.');
+//     }
+//   }
+// };
 const handleManualBirthdaySMS = async () => {
   const membersNeedingSMS = birthdayMembers.today.filter(member => 
     member.contact && !hasSmsSentToday(member.id)
@@ -65,7 +95,7 @@ const handleManualBirthdaySMS = async () => {
       const successCount = results.filter(r => r.success).length;
       const failCount = results.length - successCount;
       
-      alert(`SMS Results:\n✅ Successfully sent: ${successCount}\n❌ Failed: ${failCount}`);
+      alert(`SMS Results:\n✅ Successfully sent: ${successCount}\n❌ Failed: ${failCount}\nAdmin notifications sent for all members.`);
       
       // Force re-render to update SMS status indicators
       setBirthdayMembers(getBirthdayMembers());
@@ -75,6 +105,72 @@ const handleManualBirthdaySMS = async () => {
     }
   }
 };
+const sendBirthdayNotificationToAdmin = async (memberName, memberAge, memberPhone) => {
+  try {
+    const adminPhone = "233244536389"; // Admin number
+    const notificationMessage = `🎂 BIRTHDAY ALERT: ${memberName} (Age: ${memberAge}) is celebrating their birthday today! Contact: ${memberPhone || 'Not available'}. Birthday SMS has been sent automatically. - Mt Zion Methodist Church System`;
+    
+    console.log("Sending birthday notification to admin:", adminPhone);
+    console.log("Admin notification message:", notificationMessage);
+    
+    const hubtelEndpoint = 'https://smsc.hubtel.com/v1/messages/send';
+    const clientId = 'vxojxzbs';
+    const clientSecret = 'uznaitfd';
+    
+    const credentials = btoa(`${clientId}:${clientSecret}`);
+    
+    const payload = {
+      From: 'MtZionMeth',
+      To: adminPhone,
+      Content: notificationMessage
+    };
+    
+    let response = await fetch(hubtelEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${credentials}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    // Try alternative methods if first fails
+    if (!response.ok && response.status === 401) {
+      const formData = new URLSearchParams({
+        clientid: clientId,
+        clientsecret: clientSecret,
+        from: 'MtZionMeth',
+        to: adminPhone,
+        content: notificationMessage
+      });
+      
+      response = await fetch(hubtelEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+    }
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Birthday notification sent to admin successfully`);
+      return { success: true, message: 'Admin notification sent successfully' };
+    } else {
+      console.error("❌ Failed to send admin notification:", result);
+      return { success: false, message: `Failed to send admin notification: ${result.message || 'Unknown error'}` };
+    }
+    
+  } catch (error) {
+    console.error("❌ Error sending admin notification:", error);
+    return { success: false, message: error.message };
+  }
+};
+
 const sendBirthdaySMS = async (phoneNumber, memberName, age) => {
   try {
     console.log("==== BIRTHDAY SMS SENDING DEBUG START ====");
@@ -267,6 +363,83 @@ const sendBirthdaySMSWithRetry = async (phoneNumber, memberName, age, maxRetries
 };
 
 // Updated bulk SMS function with better error handling
+// const sendBirthdaySMSToAll = async (birthdayMembers) => {
+//   console.log(`📱 Starting bulk SMS send to ${birthdayMembers.length} members...`);
+  
+//   const results = [];
+//   let successCount = 0;
+//   let failCount = 0;
+  
+//   for (const [index, member] of birthdayMembers.entries()) {
+//     console.log(`📤 Processing ${index + 1}/${birthdayMembers.length}: ${member.firstName} ${member.lastName}`);
+    
+//     if (!member.contact) {
+//       console.log(`⚠️  No contact number for ${member.firstName} ${member.lastName}`);
+//       results.push({
+//         member: `${member.firstName} ${member.lastName}`,
+//         phone: 'No contact',
+//         success: false,
+//         message: 'No contact number available'
+//       });
+//       failCount++;
+//       continue;
+//     }
+    
+//     if (hasSmsSentToday(member.id)) {
+//       console.log(`ℹ️  SMS already sent today for ${member.firstName} ${member.lastName}`);
+//       results.push({
+//         member: `${member.firstName} ${member.lastName}`,
+//         phone: member.contact,
+//         success: true,
+//         message: 'SMS already sent today'
+//       });
+//       successCount++;
+//       continue;
+//     }
+    
+//     try {
+//       const result = await sendBirthdaySMSWithRetry(
+//         member.contact, 
+//         `${member.firstName} ${member.lastName}`, 
+//         member.age
+//       );
+      
+//       if (result.success) {
+//         markSmsSent(member.id);
+//         successCount++;
+//         console.log(`✅ Success: ${member.firstName} ${member.lastName}`);
+//       } else {
+//         failCount++;
+//         console.log(`❌ Failed: ${member.firstName} ${member.lastName} - ${result.message}`);
+//       }
+      
+//       results.push({
+//         member: `${member.firstName} ${member.lastName}`,
+//         phone: member.contact,
+//         ...result
+//       });
+      
+//       // Add delay between SMS to avoid rate limiting (Hubtel allows 5 requests per minute)
+//       if (index < birthdayMembers.length - 1) {
+//         console.log("⏳ Waiting 15 seconds to avoid rate limiting...");
+//         await new Promise(resolve => setTimeout(resolve, 15000));
+//       }
+      
+//     } catch (error) {
+//       console.error(`💥 Error sending SMS to ${member.firstName} ${member.lastName}:`, error);
+//       results.push({
+//         member: `${member.firstName} ${member.lastName}`,
+//         phone: member.contact,
+//         success: false,
+//         message: error.message
+//       });
+//       failCount++;
+//     }
+//   }
+  
+//   console.log(`📊 Bulk SMS Results: ✅ ${successCount} successful, ❌ ${failCount} failed`);
+//   return results;
+// };
 const sendBirthdaySMSToAll = async (birthdayMembers) => {
   console.log(`📱 Starting bulk SMS send to ${birthdayMembers.length} members...`);
   
@@ -286,6 +459,14 @@ const sendBirthdaySMSToAll = async (birthdayMembers) => {
         message: 'No contact number available'
       });
       failCount++;
+      
+      // Still send admin notification even if member has no contact
+      await sendBirthdayNotificationToAdmin(
+        `${member.firstName} ${member.lastName}`,
+        member.age,
+        'No contact available'
+      );
+      
       continue;
     }
     
@@ -312,9 +493,28 @@ const sendBirthdaySMSToAll = async (birthdayMembers) => {
         markSmsSent(member.id);
         successCount++;
         console.log(`✅ Success: ${member.firstName} ${member.lastName}`);
+        
+        // Send admin notification after successful SMS
+        setTimeout(async () => {
+          await sendBirthdayNotificationToAdmin(
+            `${member.firstName} ${member.lastName}`,
+            member.age,
+            member.contact
+          );
+        }, 2000); // 2 second delay to avoid rate limiting
+        
       } else {
         failCount++;
         console.log(`❌ Failed: ${member.firstName} ${member.lastName} - ${result.message}`);
+        
+        // Send admin notification even if SMS failed
+        setTimeout(async () => {
+          await sendBirthdayNotificationToAdmin(
+            `${member.firstName} ${member.lastName}`,
+            member.age,
+            member.contact
+          );
+        }, 2000);
       }
       
       results.push({
@@ -338,6 +538,15 @@ const sendBirthdaySMSToAll = async (birthdayMembers) => {
         message: error.message
       });
       failCount++;
+      
+      // Send admin notification for error cases too
+      setTimeout(async () => {
+        await sendBirthdayNotificationToAdmin(
+          `${member.firstName} ${member.lastName}`,
+          member.age,
+          member.contact
+        );
+      }, 2000);
     }
   }
   
@@ -767,6 +976,7 @@ useEffect(() => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="error">{error}</div>;
+
   return (
     <div className="members">
       <h1>Manage Members</h1>
