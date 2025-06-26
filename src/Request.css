@@ -1,188 +1,4 @@
-/* Base styles with relative units */
-:root {
-    --container-padding: clamp(1rem, 5vw, 2rem);
-    --circle-size: clamp(120px, 25vw, 150px);
-    --form-padding: clamp(1.5rem, 4vw, 2.5rem);
-  }
-  
-  /* General container styles */
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--container-padding);
-    font-family: Arial, sans-serif;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
-  
-  /* Circles container with responsive grid */
-  .circles-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-    gap: clamp(1rem, 3vw, 1.5rem);
-    width: 100%;
-    margin: 2rem auto;
-    padding: 0 1rem;
-  }
-  
-  /* Circle button styles with responsive dimensions */
-  .circle-button {
-    width: var(--circle-size);
-    height: var(--circle-size);
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-align: center;
-    font-weight: bold;
-    padding: clamp(0.5rem, 2vw, 1rem);
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    margin: 0 auto;
-  }
-  
-  /* Responsive color schemes for circle buttons */
-  .circle-button:nth-child(1) { background-color: #FF6B6B; }
-  .circle-button:nth-child(2) { background-color: #4ECDC4; }
-  .circle-button:nth-child(3) { background-color: #45B7D1; }
-  .circle-button:nth-child(4) { background-color: #FDCB6E; }
-  
-  .circle-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Create user button */
-  .create-user-button {
-    background-color: #FF5722;
-    margin-bottom: clamp(1.5rem, 4vw, 2rem);
-  }
-  
-  /* Form Overlay */
-  .form-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: clamp(1rem, 3vw, 1.5rem);
-    overflow-y: auto;
-  }
-  
-  /* Responsive Form styles */
-  .form {
-    width: 100%;
-    max-width: min(700px, 90vw);
-    background-color: white;
-    padding: var(--form-padding);
-    border-radius: clamp(0.5rem, 2vw, 0.9375rem);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    position: relative;
-    margin: auto;
-  }
-  
-  .form-title {
-    text-align: center;
-    margin-bottom: clamp(1.5rem, 4vw, 2rem);
-    color: #333;
-    font-size: clamp(1.25rem, 3vw, 1.5rem);
-    font-weight: 600;
-  }
-  
-  /* Responsive form layout */
-  .form-row {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .form-group {
-    flex: 1;
-    min-width: 100%;
-  }
-  
-  .form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #555;
-    font-weight: 600;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-  }
-  
-  .form input,
-  .form select {
-    width: 100%;
-    padding: clamp(0.5rem, 2vw, 0.75rem);
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    transition: border-color 0.3s ease;
-  }
-  
-  .form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: clamp(1.5rem, 4vw, 2rem);
-  }
-  
-  .submit-button,
-  .cancel-button {
-    width: 100%;
-    padding: clamp(0.75rem, 2vw, 1rem);
-    border: none;
-    border-radius: 0.5rem;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: clamp(0.75rem, 2vw, 1rem);
-    border-radius: 0.5rem;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    margin-top: 1rem;
-  }
-  
-  /* Media Queries for larger screens */
-  @media (min-width: 768px) {
-    .form-row {
-      flex-direction: row;
-      gap: 1.5rem;
-    }
-  
-    .form-group {
-      min-width: 0;
-    }
-  
-    .form-actions {
-      flex-direction: row;
-      justify-content: flex-end;
-      gap: 1rem;
-    }
-  
-    .submit-button,
-    .cancel-button {
-      width: auto;
-      min-width: 150px;
-    }
-  }
-
-  /* Modal Overlay */
+/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -515,22 +331,22 @@
 }
 
 .resolve-btn {
-  background-color: #d9ddda;
-  color: rgb(0, 0, 0);
+  background-color: #28a745;
+  color: white;
 }
 
 .resolve-btn:hover:not(:disabled) {
-  background-color: #ebf1ed;
+  background-color: #218838;
   transform: translateY(-1px);
 }
 
 .reject-btn {
-  background-color: #eae7e7;
-  color: rgb(0, 0, 0);
+  background-color: #dc3545;
+  color: white;
 }
 
 .reject-btn:hover:not(:disabled) {
-  background-color: #ffffff;
+  background-color: #c82333;
   transform: translateY(-1px);
 }
 
@@ -841,21 +657,3 @@
   width: 100px;
   height: 100px;
 }
-  
-  /* Additional accessibility improvements */
-  @media (prefers-reduced-motion: reduce) {
-    .circle-button,
-    .submit-button,
-    .cancel-button {
-      transition: none;
-    }
-  }
-  
-  /* High contrast mode support */
-  @media (prefers-contrast: high) {
-    .circle-button,
-    .submit-button,
-    .cancel-button {
-      border: 2px solid #000;
-    }
-  }

@@ -296,7 +296,241 @@
         font-size: 0.9rem;
     }
 }
+/* Dashboard Header Enhancements */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 30px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
 
+.dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="cross" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M10 5v10M5 10h10" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none"/></pattern></defs><rect width="100" height="100" fill="url(%23cross)"/></svg>');
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.dashboard-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Greeting Section */
+.greeting-section {
+  flex: 1;
+  text-align: left;
+}
+
+.time-greeting {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 5px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #fff, #f0f8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: greetingGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes greetingGlow {
+  0% { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+  100% { text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.5); }
+}
+
+.current-date {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* Clock Section */
+.clock-section {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 20px;
+}
+
+.analog-clock {
+  margin-bottom: 10px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: clockFloat 6s ease-in-out infinite;
+}
+
+@keyframes clockFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.analog-clock svg {
+  background: radial-gradient(circle, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 20px rgba(0, 0, 0, 0.1),
+    inset 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.digital-time {
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-align: center;
+  letter-spacing: 1px;
+  animation: digitalPulse 2s ease-in-out infinite;
+}
+
+@keyframes digitalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Scripture Section */
+.scripture-section {
+  flex: 1;
+  text-align: right;
+  max-width: 350px;
+}
+
+.scripture-container {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.scripture-container::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 4rem;
+  opacity: 0.3;
+  font-family: Georgia, serif;
+}
+
+.scripture-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin: 0 0 10px 0;
+  font-style: italic;
+  text-align: left;
+  opacity: 0.95;
+  animation: scriptureSlide 10s ease-in-out infinite;
+}
+
+@keyframes scriptureSlide {
+  0%, 90%, 100% { opacity: 0.95; transform: translateY(0); }
+  5%, 85% { opacity: 1; transform: translateY(-2px); }
+}
+
+.scripture-reference {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+  opacity: 0.8;
+  color: #f0f8ff;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 25px 20px;
+    gap: 20px;
+  }
+  
+  .greeting-section,
+  .scripture-section {
+    flex: none;
+    text-align: center;
+    max-width: none;
+  }
+  
+  .time-greeting {
+    font-size: 2rem;
+  }
+  
+  .clock-section {
+    margin: 0;
+  }
+  
+  .scripture-container {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 20px 15px;
+    gap: 15px;
+  }
+  
+  .time-greeting {
+    font-size: 1.8rem;
+  }
+  
+  .current-date {
+    font-size: 1rem;
+  }
+  
+  .analog-clock svg {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .digital-time {
+    font-size: 1.1rem;
+    padding: 6px 12px;
+  }
+  
+  .scripture-text {
+    font-size: 0.9rem;
+  }
+  
+  .scripture-container {
+    padding: 15px;
+  }
+}
+
+/* Additional animation for smooth transitions */
+.dashboard-header * {
+  transition: all 0.3s ease;
+}
+
+/* Enhance the existing dashboard styling */
+.dashboard h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
 /* Display hamburger menu on mobile */
 @media (max-width: 768px) {
     .hamburger {

@@ -8,6 +8,8 @@ const Dashboard = () => {
   const [membersData, setMembersData] = useState([]);
   const [collectionsData, setCollectionsData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentScripture, setCurrentScripture] = useState(0);
 
   const [summaryStats, setSummaryStats] = useState({
     totalMembers: 0,
@@ -19,7 +21,46 @@ const Dashboard = () => {
     totalCollectionsByCurrency: {}
   });
 
+  // Bible verses array
+  const bibleVerses = [
+    { text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.", reference: "Jeremiah 29:11" },
+    { text: "Trust in the Lord with all your heart and lean not on your own understanding.", reference: "Proverbs 3:5" },
+    { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", reference: "Joshua 1:9" },
+    { text: "And we know that in all things God works for the good of those who love him, who have been called according to his purpose.", reference: "Romans 8:28" },
+    { text: "The Lord is my shepherd, I lack nothing.", reference: "Psalm 23:1" },
+    { text: "Cast all your anxiety on him because he cares for you.", reference: "1 Peter 5:7" },
+    { text: "I can do all this through him who gives me strength.", reference: "Philippians 4:13" },
+    { text: "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you.", reference: "Numbers 6:24-25" }
+  ];
+
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  // Time-based greeting function
+  const getTimeBasedGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return "Good Morning! 🌅";
+    if (hour < 17) return "Good Afternoon! ☀️";
+    if (hour < 21) return "Good Evening! 🌆";
+    return "Good Night! 🌙";
+  };
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Rotate scripture every 10 seconds
+  useEffect(() => {
+    const scriptureTimer = setInterval(() => {
+      setCurrentScripture((prev) => (prev + 1) % bibleVerses.length);
+    }, 10000);
+
+    return () => clearInterval(scriptureTimer);
+  }, []);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
@@ -219,9 +260,116 @@ const Dashboard = () => {
     }
     return null;
   };
+
+  // Analog Clock Component
+  const AnalogClock = () => {
+    const seconds = currentTime.getSeconds();
+    const minutes = currentTime.getMinutes();
+    const hours = currentTime.getHours() % 12;
+
+    const secondAngle = (seconds * 6) - 90;
+    const minuteAngle = (minutes * 6) - 90;
+    const hourAngle = (hours * 30 + minutes * 0.5) - 90;
+
+    return (
+      <div className="analog-clock">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          {/* Clock face */}
+          <circle cx="60" cy="60" r="58" fill="white" stroke="#333" strokeWidth="2"/>
+          
+          {/* Hour markers */}
+          {[...Array(12)].map((_, i) => {
+            const angle = (i * 30) * Math.PI / 180;
+            const x1 = 60 + 45 * Math.cos(angle);
+            const y1 = 60 + 45 * Math.sin(angle);
+            const x2 = 60 + 50 * Math.cos(angle);
+            const y2 = 60 + 50 * Math.sin(angle);
+            return (
+              <line
+                key={i}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="#333"
+                strokeWidth="2"
+              />
+            );
+          })}
+          
+          {/* Hour hand */}
+          <line
+            x1="60"
+            y1="60"
+            x2={60 + 25 * Math.cos(hourAngle * Math.PI / 180)}
+            y2={60 + 25 * Math.sin(hourAngle * Math.PI / 180)}
+            stroke="#333"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          
+          {/* Minute hand */}
+          <line
+            x1="60"
+            y1="60"
+            x2={60 + 35 * Math.cos(minuteAngle * Math.PI / 180)}
+            y2={60 + 35 * Math.sin(minuteAngle * Math.PI / 180)}
+            stroke="#666"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          
+          {/* Second hand */}
+          <line
+            x1="60"
+            y1="60"
+            x2={60 + 40 * Math.cos(secondAngle * Math.PI / 180)}
+            y2={60 + 40 * Math.sin(secondAngle * Math.PI / 180)}
+            stroke="#e74c3c"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+          
+          {/* Center dot */}
+          <circle cx="60" cy="60" r="3" fill="#333"/>
+        </svg>
+      </div>
+    );
+  };
   
   return (
     <div className="dashboard">
+      {/* Header Section with Greeting, Clock and Scripture */}
+      <div className="dashboard-header">
+        <div className="greeting-section">
+          <h1 className="time-greeting">{getTimeBasedGreeting()}</h1>
+          <p className="current-date">{currentTime.toLocaleDateString('en-GB', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}</p>
+        </div>
+        
+        <div className="clock-section">
+          <AnalogClock />
+          <div className="digital-time">
+            {currentTime.toLocaleTimeString('en-GB', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              second: '2-digit'
+            })}
+          </div>
+        </div>
+        
+        <div className="scripture-section">
+          <div className="scripture-container">
+            <p className="scripture-text">"{bibleVerses[currentScripture].text}"</p>
+            <p className="scripture-reference">- {bibleVerses[currentScripture].reference}</p>
+          </div>
+        </div>
+      </div>
+
       <h2>Dashboard Overview</h2>
       
       {/* Icon Stats Section */}
@@ -420,8 +568,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
 
 
 
