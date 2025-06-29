@@ -17,8 +17,13 @@ const Attendance = () => {
   // State for form data
   const [attendanceData, setAttendanceData] = useState({
     date: '',
-    numberOfPeople: '',
-    attendanceType: ''
+    attendanceType: '',
+    // For Adults
+    numberOfMen: '',
+    numberOfWomen: '',
+    // For Children
+    numberOfBoys: '',
+    numberOfGirls: ''
   });
 
   // State for attendance reports
@@ -34,7 +39,6 @@ const Attendance = () => {
   const [yearlyReportLoading, setYearlyReportLoading] = useState(false);
   const [yearlyReportError, setYearlyReportError] = useState('');
   const [yearlyReportSummary, setYearlyReportSummary] = useState(null);
-
 
   // State for form submission status
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
@@ -53,6 +57,16 @@ const Attendance = () => {
     }));
   };
 
+  // Calculate total people based on attendance type
+  const calculateTotalPeople = () => {
+    if (attendanceData.attendanceType === 'Adult') {
+      return (parseInt(attendanceData.numberOfMen) || 0) + (parseInt(attendanceData.numberOfWomen) || 0);
+    } else if (attendanceData.attendanceType === 'Children') {
+      return (parseInt(attendanceData.numberOfBoys) || 0) + (parseInt(attendanceData.numberOfGirls) || 0);
+    }
+    return 0;
+  };
+
   // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,22 +75,43 @@ const Attendance = () => {
     setSuccess('');
 
     try {
-      // Validate required fields
-      const requiredFields = ['date', 'numberOfPeople', 'attendanceType'];
-      const missingFields = requiredFields.filter(field => !attendanceData[field]);
-
-      if (missingFields.length > 0) {
-        setSubmitError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      // Validate required fields based on attendance type
+      if (!attendanceData.date || !attendanceData.attendanceType) {
+        setSubmitError('Please fill in date and attendance type');
         setIsSubmitLoading(false);
         return;
+      }
+
+      // Validate gender-specific fields
+      if (attendanceData.attendanceType === 'Adult') {
+        if (!attendanceData.numberOfMen && !attendanceData.numberOfWomen) {
+          setSubmitError('Please enter number of men and/or women');
+          setIsSubmitLoading(false);
+          return;
+        }
+      } else if (attendanceData.attendanceType === 'Children') {
+        if (!attendanceData.numberOfBoys && !attendanceData.numberOfGirls) {
+          setSubmitError('Please enter number of boys and/or girls');
+          setIsSubmitLoading(false);
+          return;
+        }
       }
 
       // Generate unique ID for Firestore document
       const attendanceDocumentId = uuidv4();
 
+      // Calculate total people
+      const totalPeople = calculateTotalPeople();
+
       // Prepare attendance data for Firestore
       const attendanceSubmissionData = {
-        ...attendanceData,
+        date: attendanceData.date,
+        attendanceType: attendanceData.attendanceType,
+        numberOfMen: parseInt(attendanceData.numberOfMen) || 0,
+        numberOfWomen: parseInt(attendanceData.numberOfWomen) || 0,
+        numberOfBoys: parseInt(attendanceData.numberOfBoys) || 0,
+        numberOfGirls: parseInt(attendanceData.numberOfGirls) || 0,
+        totalPeople: totalPeople,
         submittedAt: new Date().toISOString()
       };
 
@@ -86,8 +121,11 @@ const Attendance = () => {
       // Reset form
       setAttendanceData({
         date: '',
-        numberOfPeople: '',
-        attendanceType: ''
+        attendanceType: '',
+        numberOfMen: '',
+        numberOfWomen: '',
+        numberOfBoys: '',
+        numberOfGirls: ''
       });
 
       setSuccess('Attendance recorded successfully!');
@@ -115,8 +153,12 @@ const Attendance = () => {
         const data = doc.data();
         return {
           id: doc.id,
-          numberOfPeople: data.numberOfPeople || 0,
           attendanceType: data.attendanceType || "Unknown",
+          numberOfMen: data.numberOfMen || 0,
+          numberOfWomen: data.numberOfWomen || 0,
+          numberOfBoys: data.numberOfBoys || 0,
+          numberOfGirls: data.numberOfGirls || 0,
+          totalPeople: data.totalPeople || (data.numberOfPeople || 0),
           date: data.date || "---",
           submittedAt: data.submittedAt || "---"
         };
@@ -150,28 +192,36 @@ const Attendance = () => {
     const doc = new jsPDF("landscape");
     const currentDate = new Date().toLocaleString();
 
-    // Add table data
+    // Add table data with gender breakdown
     const tableData = filteredLogs.map((log, index) => [
       index + 1,
       log.attendanceType,
-      log.numberOfPeople,
-      log.date,
-      log.submittedAt
+      log.attendanceType === 'Adult' ? log.numberOfMen : log.numberOfBoys,
+      log.attendanceType === 'Adult' ? log.numberOfWomen : log.numberOfGirls,
+      log.totalPeople,
+      log.date
     ]);
 
-    doc.text("Attendance Reports", 70, 20);
-    doc.text(`Date Range: ${startDate} to ${endDate}`, 70, 30);
-    doc.text(`Attendance Type: ${selectedAttendanceType || "All"}`, 70, 40);
-    doc.text(`Generated on: ${currentDate}`, 70, 50);
+    doc.text("Attendance Reports", 100, 20);
+    doc.text(`Date Range: ${startDate} to ${endDate}`, 100, 30);
+    doc.text(`Attendance Type: ${selectedAttendanceType || "All"}`, 100, 40);
+    doc.text(`Generated on: ${currentDate}`, 100, 50);
+
+    const headers = selectedAttendanceType === 'Adult' 
+      ? ["#", "Type", "Men", "Women", "Total", "Date"]
+      : selectedAttendanceType === 'Children'
+      ? ["#", "Type", "Boys", "Girls", "Total", "Date"]
+      : ["#", "Type", "Male/Boys", "Female/Girls", "Total", "Date"];
 
     doc.autoTable({
-      head: [["#", "Attendance Type", "Number of People", "Date", "Submitted At"]],
+      head: [headers],
       body: tableData,
       startY: 60,
     });
 
     doc.save("Filtered_Attendance_Report.pdf");
   };
+
   const generateYearlyReport = async () => {
     if (!selectedYear) {
       alert("Please select a year for the report.");
@@ -190,8 +240,12 @@ const Attendance = () => {
         const data = doc.data();
         return {
           id: doc.id,
-          numberOfPeople: parseInt(data.numberOfPeople) || 0,
           attendanceType: data.attendanceType || "Unknown",
+          numberOfMen: data.numberOfMen || 0,
+          numberOfWomen: data.numberOfWomen || 0,
+          numberOfBoys: data.numberOfBoys || 0,
+          numberOfGirls: data.numberOfGirls || 0,
+          totalPeople: data.totalPeople || (data.numberOfPeople || 0),
           date: data.date || "---"
         };
       });
@@ -205,7 +259,7 @@ const Attendance = () => {
         return logDate >= yearStart && logDate <= yearEnd;
       });
 
-      // Group logs by month and attendance type
+      // Group logs by month and attendance type with gender breakdown
       const monthlyBreakdown = {};
       const monthNames = [
         "January", "February", "March", "April", "May", "June", 
@@ -214,8 +268,12 @@ const Attendance = () => {
 
       monthNames.forEach(month => {
         monthlyBreakdown[month] = {
-          Children: 0,
-          Adult: 0,
+          Men: 0,
+          Women: 0,
+          Boys: 0,
+          Girls: 0,
+          AdultTotal: 0,
+          ChildrenTotal: 0,
           Total: 0
         };
       });
@@ -224,22 +282,35 @@ const Attendance = () => {
         const logDate = new Date(log.date);
         const monthName = monthNames[logDate.getMonth()];
         
-        monthlyBreakdown[monthName][log.attendanceType] += log.numberOfPeople;
-        monthlyBreakdown[monthName].Total += log.numberOfPeople;
+        monthlyBreakdown[monthName].Men += log.numberOfMen;
+        monthlyBreakdown[monthName].Women += log.numberOfWomen;
+        monthlyBreakdown[monthName].Boys += log.numberOfBoys;
+        monthlyBreakdown[monthName].Girls += log.numberOfGirls;
+        monthlyBreakdown[monthName].AdultTotal += (log.numberOfMen + log.numberOfWomen);
+        monthlyBreakdown[monthName].ChildrenTotal += (log.numberOfBoys + log.numberOfGirls);
+        monthlyBreakdown[monthName].Total += log.totalPeople;
       });
 
       // Calculate yearly totals
       const yearlyTotals = {
-        Children: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Children, 0),
-        Adult: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Adult, 0),
+        Men: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Men, 0),
+        Women: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Women, 0),
+        Boys: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Boys, 0),
+        Girls: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Girls, 0),
+        AdultTotal: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.AdultTotal, 0),
+        ChildrenTotal: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.ChildrenTotal, 0),
         Total: Object.values(monthlyBreakdown).reduce((sum, month) => sum + month.Total, 0)
       };
 
       // Prepare summary for display
       const monthlyReportData = monthNames.map(month => ({
         month,
-        children: monthlyBreakdown[month].Children,
-        adult: monthlyBreakdown[month].Adult,
+        men: monthlyBreakdown[month].Men,
+        women: monthlyBreakdown[month].Women,
+        boys: monthlyBreakdown[month].Boys,
+        girls: monthlyBreakdown[month].Girls,
+        adultTotal: monthlyBreakdown[month].AdultTotal,
+        childrenTotal: monthlyBreakdown[month].ChildrenTotal,
         total: monthlyBreakdown[month].Total
       }));
 
@@ -270,20 +341,28 @@ const Attendance = () => {
     // Prepare table data
     const tableData = yearlyReports.map(report => [
       report.month,
-      report.children,
-      report.adult,
+      report.men,
+      report.women,
+      report.adultTotal,
+      report.boys,
+      report.girls,
+      report.childrenTotal,
       report.total
     ]);
 
     // Add table
     doc.autoTable({
-      head: [["Month", "Children", "Adult", "Total"]],
+      head: [["Month", "Men", "Women", "Adult Total", "Boys", "Girls", "Children Total", "Grand Total"]],
       body: [
         ...tableData,
         [
           "YEARLY TOTAL", 
-          yearlyReportSummary.yearlyTotals.Children, 
-          yearlyReportSummary.yearlyTotals.Adult, 
+          yearlyReportSummary.yearlyTotals.Men,
+          yearlyReportSummary.yearlyTotals.Women,
+          yearlyReportSummary.yearlyTotals.AdultTotal,
+          yearlyReportSummary.yearlyTotals.Boys,
+          yearlyReportSummary.yearlyTotals.Girls,
+          yearlyReportSummary.yearlyTotals.ChildrenTotal,
           yearlyReportSummary.yearlyTotals.Total
         ]
       ],
@@ -300,236 +379,278 @@ const Attendance = () => {
     return Array.from({ length: 6 }, (_, i) => currentYear - i);
   };
 
- // Add these Excel export functions
+  // Excel export functions
+  const generateExcel = () => {
+    // Create worksheet data with proper formatting
+    const wsData = [
+      // Header row
+      ['Attendance Report'],
+      [`Date Range: ${startDate} to ${endDate}`],
+      [`Attendance Type: ${selectedAttendanceType || "All"}`],
+      [`Generated on: ${new Date().toLocaleString()}`],
+      [], // Empty row for spacing
+      // Table headers
+      ['#', 'Type', 'Men/Boys', 'Women/Girls', 'Total', 'Date'],
+      // Table data
+      ...filteredLogs.map((log, index) => [
+        index + 1,
+        log.attendanceType,
+        log.attendanceType === 'Adult' ? log.numberOfMen : log.numberOfBoys,
+        log.attendanceType === 'Adult' ? log.numberOfWomen : log.numberOfGirls,
+        log.totalPeople,
+        new Date(log.date).toLocaleDateString()
+      ]),
+      [], // Empty row before summary
+      [`Total Attendance: ${filteredLogs.reduce((sum, log) => sum + log.totalPeople, 0)}`]
+    ];
 
-const generateExcel = () => {
-  // Create worksheet data with proper formatting
-  const wsData = [
-    // Header row
-    ['Attendance Report'],
-    [`Date Range: ${startDate} to ${endDate}`],
-    [`Attendance Type: ${selectedAttendanceType || "All"}`],
-    [`Generated on: ${new Date().toLocaleString()}`],
-    [], // Empty row for spacing
-    // Table headers
-    ['#', 'Attendance Type', 'Number of People', 'Date'],
-    // Table data
-    ...filteredLogs.map((log, index) => [
-      index + 1,
-      log.attendanceType,
-      parseInt(log.numberOfPeople),
-      new Date(log.date).toLocaleDateString()
-    ]),
-    [], // Empty row before summary
-    [`Total Attendance: ${filteredLogs.reduce((sum, log) => sum + parseInt(log.numberOfPeople), 0)}`]
-  ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Set column widths
+    const cols = [
+      { wch: 5 },  // #
+      { wch: 15 }, // Type
+      { wch: 15 }, // Men/Boys
+      { wch: 15 }, // Women/Girls
+      { wch: 10 }, // Total
+      { wch: 15 }, // Date
+    ];
+    ws['!cols'] = cols;
 
-  // Set column widths
-  const cols = [
-    { wch: 5 },  // #
-    { wch: 15 }, // Attendance Type
-    { wch: 15 }, // Number of People
-    { wch: 15 }, // Date
-  ];
-  ws['!cols'] = cols;
+    // Merge cells for header
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Title
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Date Range
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }, // Attendance Type
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 5 } }, // Generated Date
+      { s: { r: wsData.length - 1, c: 0 }, e: { r: wsData.length - 1, c: 5 } } // Total
+    ];
 
-  // Merge cells for header
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Date Range
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, // Attendance Type
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } }, // Generated Date
-    { s: { r: wsData.length - 1, c: 0 }, e: { r: wsData.length - 1, c: 3 } } // Total
-  ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance Report');
+    XLSX.writeFile(wb, `Filtered_Attendance_Report.xlsx`);
+  };
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Attendance Report');
-  XLSX.writeFile(wb, `Filtered_Attendance_Report.xlsx`);
-};
+  const generateYearlyExcel = () => {
+    if (!yearlyReportSummary) return;
 
-const generateYearlyExcel = () => {
-  if (!yearlyReportSummary) return;
+    // Create worksheet data with proper formatting
+    const wsData = [
+      // Header rows
+      [`Yearly Attendance Report - ${yearlyReportSummary.selectedYear}`],
+      [`Generated on: ${new Date().toLocaleString()}`],
+      [], // Empty row for spacing
+      // Table headers
+      ['Month', 'Men', 'Women', 'Adult Total', 'Boys', 'Girls', 'Children Total', 'Grand Total'],
+      // Monthly data
+      ...yearlyReports.map(report => [
+        report.month,
+        report.men,
+        report.women,
+        report.adultTotal,
+        report.boys,
+        report.girls,
+        report.childrenTotal,
+        report.total
+      ]),
+      [], // Empty row before totals
+      // Yearly totals with proper formatting
+      ['YEARLY TOTAL',
+        yearlyReportSummary.yearlyTotals.Men,
+        yearlyReportSummary.yearlyTotals.Women,
+        yearlyReportSummary.yearlyTotals.AdultTotal,
+        yearlyReportSummary.yearlyTotals.Boys,
+        yearlyReportSummary.yearlyTotals.Girls,
+        yearlyReportSummary.yearlyTotals.ChildrenTotal,
+        yearlyReportSummary.yearlyTotals.Total
+      ]
+    ];
 
-  // Create worksheet data with proper formatting
-  const wsData = [
-    // Header rows
-    [`Yearly Attendance Report - ${yearlyReportSummary.selectedYear}`],
-    [`Generated on: ${new Date().toLocaleString()}`],
-    [], // Empty row for spacing
-    // Table headers
-    ['Month', 'Children', 'Adult', 'Total'],
-    // Monthly data
-    ...yearlyReports.map(report => [
-      report.month,
-      report.children,
-      report.adult,
-      report.total
-    ]),
-    [], // Empty row before totals
-    // Yearly totals with proper formatting
-    ['YEARLY TOTAL',
-      yearlyReportSummary.yearlyTotals.Children,
-      yearlyReportSummary.yearlyTotals.Adult,
-      yearlyReportSummary.yearlyTotals.Total
-    ]
-  ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Set column widths
+    const cols = [
+      { wch: 12 }, // Month
+      { wch: 8 },  // Men
+      { wch: 8 },  // Women
+      { wch: 12 }, // Adult Total
+      { wch: 8 },  // Boys
+      { wch: 8 },  // Girls
+      { wch: 12 }, // Children Total
+      { wch: 12 }, // Grand Total
+    ];
+    ws['!cols'] = cols;
 
-  // Set column widths
-  const cols = [
-    { wch: 15 }, // Month
-    { wch: 12 }, // Children
-    { wch: 12 }, // Adult
-    { wch: 12 }, // Total
-  ];
-  ws['!cols'] = cols;
+    // Merge cells for header
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Title
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }, // Generated Date
+    ];
 
-  // Merge cells for header
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Title
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // Generated Date
-  ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Yearly Report');
+    XLSX.writeFile(wb, `Yearly_Attendance_Report_${yearlyReportSummary.selectedYear}.xlsx`);
+  };
 
-  // Add some basic styling
-  // Style for headers
-  for (let C = 0; C <= 3; C++) {
-    const headerCell = XLSX.utils.encode_cell({ r: 3, c: C });
-    if (!ws[headerCell]) ws[headerCell] = {};
-    ws[headerCell].s = {
-      font: { bold: true },
-      alignment: { horizontal: 'center' }
-    };
-  }
-
-  // Style for yearly totals row
-  const lastRowIndex = wsData.length - 1;
-  for (let C = 0; C <= 3; C++) {
-    const totalCell = XLSX.utils.encode_cell({ r: lastRowIndex, c: C });
-    if (!ws[totalCell]) ws[totalCell] = {};
-    ws[totalCell].s = {
-      font: { bold: true },
-      alignment: { horizontal: C === 0 ? 'left' : 'right' }
-    };
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Yearly Report');
-  XLSX.writeFile(wb, `Yearly_Attendance_Report_${yearlyReportSummary.selectedYear}.xlsx`);
-};
   return (
     <div className="container">
       <div className="button-container">
-  <div 
-    className="attendance-button record-button"
-    onClick={() => {
-      setIsFormVisible(!isFormVisible);
-      setIsReportsVisible(false);
-      // Reset form when opening
-      setAttendanceData({
-        date: '',
-        numberOfPeople: '',
-        attendanceType: ''
-      });
-    }}
-  >
-    Record Attendance
-  </div>
+        <div 
+          className="attendance-button record-button"
+          onClick={() => {
+            setIsFormVisible(!isFormVisible);
+            setIsReportsVisible(false);
+            // Reset form when opening
+            setAttendanceData({
+              date: '',
+              attendanceType: '',
+              numberOfMen: '',
+              numberOfWomen: '',
+              numberOfBoys: '',
+              numberOfGirls: ''
+            });
+          }}
+        >
+          Record Attendance
+        </div>
 
-  <div 
-    className="attendance-button report-button"
-    onClick={() => {
-      setIsReportsVisible(!isReportsVisible);
-      setIsFormVisible(false);
-    }}
-  >
-    Generate Monthly Attendance Reports
-  </div>
-</div>
+        <div 
+          className="attendance-button report-button"
+          onClick={() => {
+            setIsReportsVisible(!isReportsVisible);
+            setIsFormVisible(false);
+          }}
+        >
+          Generate Monthly Attendance Reports
+        </div>
+      </div>
       
       {/* Attendance Form */}
       {isFormVisible && (
         <div className='container-formss'>
-        <div className="form">
-          <h2 className="form-title">Attendance Record</h2>
-          
-          {/* Error Message */}
-          {submitError && (
-            <div className="error-message" style={{
-              color: 'red', 
-              marginBottom: '10px', 
-              padding: '10px', 
-              backgroundColor: '#ffeeee',
-              border: '1px solid red',
-              borderRadius: '5px'
-            }}>
-              {submitError}
-            </div>
-          )}
+          <div className="form">
+            <h2 className="form-title">Attendance Record</h2>
+            
+            {/* Error Message */}
+            {submitError && (
+              <div className="error-message" style={{
+                color: 'red', 
+                marginBottom: '10px', 
+                padding: '10px', 
+                backgroundColor: '#ffeeee',
+                border: '1px solid red',
+                borderRadius: '5px'
+              }}>
+                {submitError}
+              </div>
+            )}
 
-          {/* Success Message */}
-          {success && (
-            <div className="success-message" style={{
-              color: 'green', 
-              marginBottom: '10px', 
-              padding: '10px', 
-              backgroundColor: '#eeffee',
-              border: '1px solid green',
-              borderRadius: '5px'
-            }}>
-              {success}
-            </div>
-          )}
+            {/* Success Message */}
+            {success && (
+              <div className="success-message" style={{
+                color: 'green', 
+                marginBottom: '10px', 
+                padding: '10px', 
+                backgroundColor: '#eeffee',
+                border: '1px solid green',
+                borderRadius: '5px'
+              }}>
+                {success}
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit}>
-            {/* Attendance Type */}
-            <div>
-              <label>Attendance Type</label>
-              <select
-                name="attendanceType"
-                value={attendanceData.attendanceType}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Attendance Type</option>
-                {ATTENDANCE_TYPES.map((attendanceType, index) => (
-                  <option key={index} value={attendanceType}>{attendanceType}</option>
-                ))}
-              </select>
-            </div>
+            <form onSubmit={handleSubmit}>
+              {/* Attendance Type */}
+              <div>
+                <label>Attendance Type</label>
+                <select
+                  name="attendanceType"
+                  value={attendanceData.attendanceType}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Attendance Type</option>
+                  {ATTENDANCE_TYPES.map((attendanceType, index) => (
+                    <option key={index} value={attendanceType}>{attendanceType}</option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Date */}
-            <div>
-              <label>Date</label>
-              <input 
-                type="date"
-                name="date"
-                value={attendanceData.date}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              {/* Date */}
+              <div>
+                <label>Date</label>
+                <input 
+                  type="date"
+                  name="date"
+                  value={attendanceData.date}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            {/* Number of People */}
-            <div>
-              <label>Number of People</label>
-              <input 
-                type="number"
-                name="numberOfPeople"
-                value={attendanceData.numberOfPeople}
-                onChange={handleChange}
-                min="0"
-                required
-              />
-            </div>
+              {/* Gender-specific fields based on attendance type */}
+              {attendanceData.attendanceType === 'Adult' && (
+                <>
+                  <div>
+                    <label>Number of Men</label>
+                    <input 
+                      type="number"
+                      name="numberOfMen"
+                      value={attendanceData.numberOfMen}
+                      onChange={handleChange}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label>Number of Women</label>
+                    <input 
+                      type="number"
+                      name="numberOfWomen"
+                      value={attendanceData.numberOfWomen}
+                      onChange={handleChange}
+                      min="0"
+                    />
+                  </div>
+                </>
+              )}
 
-            <button type="submit" disabled={isSubmitLoading}>
-              {isSubmitLoading ? 'Recording Attendance...' : 'Record Attendance'}
-            </button>
-          </form>
-        </div>
+              {attendanceData.attendanceType === 'Children' && (
+                <>
+                  <div>
+                    <label>Number of Boys</label>
+                    <input 
+                      type="number"
+                      name="numberOfBoys"
+                      value={attendanceData.numberOfBoys}
+                      onChange={handleChange}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label>Number of Girls</label>
+                    <input 
+                      type="number"
+                      name="numberOfGirls"
+                      value={attendanceData.numberOfGirls}
+                      onChange={handleChange}
+                      min="0"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Display total */}
+              {attendanceData.attendanceType && (
+                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px' }}>
+                  <strong>Total People: {calculateTotalPeople()}</strong>
+                </div>
+              )}
+
+              <button type="submit" disabled={isSubmitLoading}>
+                {isSubmitLoading ? 'Recording Attendance...' : 'Record Attendance'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
@@ -582,64 +703,93 @@ const generateYearlyExcel = () => {
               <div className="summary-section">
                 <h3>Summary</h3>
                 <p>Total Attendance Records: {filteredLogs.length}</p>
-                <p>Total People: {filteredLogs.reduce((sum, log) => sum + parseInt(log.numberOfPeople), 0)}</p>
+                <p>Total People: {filteredLogs.reduce((sum, log) => sum + log.totalPeople, 0)}</p>
+                {selectedAttendanceType === 'Adult' && (
+                  <>
+                    <p>Total Men: {filteredLogs.reduce((sum, log) => sum + log.numberOfMen, 0)}</p>
+                    <p>Total Women: {filteredLogs.reduce((sum, log) => sum + log.numberOfWomen, 0)}</p>
+                  </>
+                )}
+                {selectedAttendanceType === 'Children' && (
+                  <>
+                    <p>Total Boys: {filteredLogs.reduce((sum, log) => sum + log.numberOfBoys, 0)}</p>
+                    <p>Total Girls: {filteredLogs.reduce((sum, log) => sum + log.numberOfGirls, 0)}</p>
+                  </>
+                )}
+                {!selectedAttendanceType && (
+                  <>
+                    <p>Total Men: {filteredLogs.reduce((sum, log) => sum + log.numberOfMen, 0)}</p>
+                    <p>Total Women: {filteredLogs.reduce((sum, log) => sum + log.numberOfWomen, 0)}</p>
+                    <p>Total Boys: {filteredLogs.reduce((sum, log) => sum + log.numberOfBoys, 0)}</p>
+                    <p>Total Girls: {filteredLogs.reduce((sum, log) => sum + log.numberOfGirls, 0)}</p>
+                  </>
+                )}
               </div>
 
               <div className="table-container">
-             <table className="attendance-table">
-         <thead>
-          <tr>
-        <th style={{color:'black'}}>#</th>
-        <th style={{color:'black'}}>Attendance Type</th>
-        <th style={{color:'black'}}>Number of People</th>
-        <th style={{color:'black'}}>Date</th>
-        {/* <th>Time&Date</th> */}
-        {/* <th>Submitted At</th> */}
-      </tr>
-    </thead>
-    <tbody>
-  {filteredLogs.map((log, index) => {
-    const date = new Date(log.date);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString();
+                <table className="attendance-table">
+                  <thead>
+                    <tr>
+                      <th style={{color:'black'}}>#</th>
+                      <th style={{color:'black'}}>Type</th>
+                      <th style={{color:'black'}}>
+                        {selectedAttendanceType === 'Adult' ? 'Men' : 
+                         selectedAttendanceType === 'Children' ? 'Boys' : 'Men/Boys'}
+                      </th>
+                      <th style={{color:'black'}}>
+                        {selectedAttendanceType === 'Adult' ? 'Women' : 
+                         selectedAttendanceType === 'Children' ? 'Girls' : 'Women/Girls'}
+                      </th>
+                      <th style={{color:'black'}}>Total</th>
+                      <th style={{color:'black'}}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLogs.map((log, index) => {
+                      const date = new Date(log.date);
+                      const formattedDate = date.toLocaleDateString();
 
-    return (
-      <tr key={log.id}>
-        <td>{index + 1}</td>
-        <td>{log.attendanceType}</td>
-        <td>{log.numberOfPeople}</td>
-        <td>
-          <div className="date-column">{formattedDate}</div>
-          {/* <div className="time-column">{formattedTime}</div> */}
-        </td>
-        {/* <td>{log.submittedAt}</td> */}
-      </tr>
-    );
-  })}
-</tbody>
-    <tfoot>
-      <tr>
-        <td colSpan="6" className="table-footer">
-          Total Attendance:{" "}
-          {filteredLogs.reduce((sum, log) => sum + parseInt(log.numberOfPeople), 0)}
-        </td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
-<div className="dropdown">
-    <button className="download-btn">Download Report ▼</button>
-    <div className="dropdown-content">
-      <button onClick={generatePDF}>Download as PDF</button>
-      <button onClick={generateExcel}>Download as Excel</button>
-    </div>
-  </div>
+                      return (
+                        <tr key={log.id}>
+                          <td>{index + 1}</td>
+                          <td>{log.attendanceType}</td>
+                          <td>
+                            {log.attendanceType === 'Adult' ? log.numberOfMen : log.numberOfBoys}
+                          </td>
+                          <td>
+                            {log.attendanceType === 'Adult' ? log.numberOfWomen : log.numberOfGirls}
+                          </td>
+                          <td>{log.totalPeople}</td>
+                          <td>
+                            <div className="date-column">{formattedDate}</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="6" className="table-footer">
+                        Total Attendance: {filteredLogs.reduce((sum, log) => sum + log.totalPeople, 0)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="dropdown">
+                <button className="download-btn">Download Report ▼</button>
+                <div className="dropdown-content">
+                  <button onClick={generatePDF}>Download as PDF</button>
+                  <button onClick={generateExcel}>Download as Excel</button>
+                </div>
+              </div>
             </>
           )}
         </div>
       )}
-       <div className="yearly-report-section">
-        <h2> Yearly Report</h2>
+      
+      <div className="yearly-report-section">
+        <h2>Yearly Report</h2>
         <div className="yearly-report-controls">
           <label>
             <select 
@@ -671,43 +821,75 @@ const generateYearlyExcel = () => {
           <div className="yearly-report-display">
             
             <div className="yearly-summary">
-            <h3>Yearly Attendance Report - {yearlyReportSummary.selectedYear}</h3>
+              <h3>Yearly Attendance Report - {yearlyReportSummary.selectedYear}</h3>
 
               <h4>Yearly Totals</h4>
-              <p>Children: {yearlyReportSummary.yearlyTotals.Children}</p>
-              <p>Adult: {yearlyReportSummary.yearlyTotals.Adult}</p>
-              <p>Total Attendance: {yearlyReportSummary.yearlyTotals.Total}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <h5>Adults</h5>
+                  <p>Men: {yearlyReportSummary.yearlyTotals.Men}</p>
+                  <p>Women: {yearlyReportSummary.yearlyTotals.Women}</p>
+                  <p><strong>Adult Total: {yearlyReportSummary.yearlyTotals.AdultTotal}</strong></p>
+                </div>
+                <div>
+                  <h5>Children</h5>
+                  <p>Boys: {yearlyReportSummary.yearlyTotals.Boys}</p>
+                  <p>Girls: {yearlyReportSummary.yearlyTotals.Girls}</p>
+                  <p><strong>Children Total: {yearlyReportSummary.yearlyTotals.ChildrenTotal}</strong></p>
+                </div>
+              </div>
+              <p><strong>Grand Total Attendance: {yearlyReportSummary.yearlyTotals.Total}</strong></p>
             </div>
 
             <table className="yearly-report-table">
               <thead>
                 <tr>
                   <th style={{color:'black'}}>Month</th>
-                  <th style={{color:'black'}}>Children</th>
-                  <th style={{color:'black'}}>Adult</th>
-                  <th style={{color:'black'}}>Total</th>
+                  <th style={{color:'black'}}>Men</th>
+                  <th style={{color:'black'}}>Women</th>
+                  <th style={{color:'black'}}>Adult Total</th>
+                  <th style={{color:'black'}}>Boys</th>
+                  <th style={{color:'black'}}>Girls</th>
+                  <th style={{color:'black'}}>Children Total</th>
+                  <th style={{color:'black'}}>Grand Total</th>
                 </tr>
               </thead>
               <tbody>
                 {yearlyReports.map((report) => (
                   <tr key={report.month}>
                     <td>{report.month}</td>
-                    <td>{report.children}</td>
-                    <td>{report.adult}</td>
-                    <td>{report.total}</td>
+                    <td>{report.men}</td>
+                    <td>{report.women}</td>
+                    <td><strong>{report.adultTotal}</strong></td>
+                    <td>{report.boys}</td>
+                    <td>{report.girls}</td>
+                    <td><strong>{report.childrenTotal}</strong></td>
+                    <td><strong>{report.total}</strong></td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr style={{ backgroundColor: '#f0f0f0', fontWeight: 'bold' }}>
+                  <td>YEARLY TOTAL</td>
+                  <td>{yearlyReportSummary.yearlyTotals.Men}</td>
+                  <td>{yearlyReportSummary.yearlyTotals.Women}</td>
+                  <td><strong>{yearlyReportSummary.yearlyTotals.AdultTotal}</strong></td>
+                  <td>{yearlyReportSummary.yearlyTotals.Boys}</td>
+                  <td>{yearlyReportSummary.yearlyTotals.Girls}</td>
+                  <td><strong>{yearlyReportSummary.yearlyTotals.ChildrenTotal}</strong></td>
+                  <td><strong>{yearlyReportSummary.yearlyTotals.Total}</strong></td>
+                </tr>
+              </tfoot>
             </table>
 
             <div className="yearly-report-actions">
-            <div className="dropdown">
-    <button className="download-btn">Download Report ▼</button>
-    <div className="dropdown-content">
-      <button onClick={generateYearlyPDF}>Download as PDF</button>
-      <button onClick={generateYearlyExcel}>Download as Excel</button>
-    </div>
-  </div>
+              <div className="dropdown">
+                <button className="download-btn">Download Report ▼</button>
+                <div className="dropdown-content">
+                  <button onClick={generateYearlyPDF}>Download as PDF</button>
+                  <button onClick={generateYearlyExcel}>Download as Excel</button>
+                </div>
+              </div>
             </div>
           </div>
         )}

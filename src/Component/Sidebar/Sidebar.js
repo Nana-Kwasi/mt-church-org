@@ -159,8 +159,12 @@ const Sidebar = () => {
         { path: "/events", label: "Events", icon: Clock },
         { path: "/announcements", label: "Logout", icon: LogOut },
       ],
-      User: [
-        { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+      View: [
+        { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { path: "/events", label: "Events", icon: Clock },
+
+        { path: "/announcements", label: "Logout", icon: LogOut },
+
       ],
     };
 

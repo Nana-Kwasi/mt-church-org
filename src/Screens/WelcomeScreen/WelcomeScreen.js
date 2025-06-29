@@ -434,6 +434,82 @@ const sendOtpDisableNotification = async (userName, reason) => {
 };
 
 // Add this function to handle OTP disable request
+// const handleOtpDisableRequest = async () => {
+//   if (!otpDisableForm.name || !otpDisableForm.email || !otpDisableForm.reason) {
+//     setOtpDisableMessage('Please fill in all required fields');
+//     return;
+//   }
+
+//   setIsSubmittingOtpDisable(true);
+//   setOtpDisableMessage('');
+
+//   try {
+//     const db = getFirestore();
+//     const disableUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+    
+//     // Save OTP disable request
+//     await addDoc(collection(db, 'OTPDisable'), {
+//       name: otpDisableForm.name,
+//       email: otpDisableForm.email.toLowerCase(),
+//       reason: otpDisableForm.reason,
+//       disableUntil: disableUntil,
+//       status: 'ACTIVE',
+//       timestamp: serverTimestamp(),
+//       deviceInfo: {
+//         userAgent: navigator.userAgent,
+//         platform: navigator.platform,
+//         language: navigator.language,
+//       }
+//     });
+
+//     // Send SMS notifications to all users
+//     await sendOtpDisableNotification(otpDisableForm.name, otpDisableForm.reason);
+
+//     // Log the OTP disable activity
+//     await logUserActivity(
+//       userDataForLogin?.userDocId || 'unknown',
+//       otpDisableForm.name,
+//       userDataForLogin?.role || 'unknown',
+//       'OTP_DISABLED',
+//       'SUCCESS',
+//       `2FA disabled for 24 hours. Reason: ${otpDisableForm.reason}`
+//     );
+
+//     setOtpDisableMessage('2FA has been disabled for 24 hours. You can now login without OTP verification.');
+    
+//     // Close modals and proceed with login
+//    // Replace the setTimeout in handleOtpDisableRequest with:
+// setTimeout(() => {
+//   setShowOtpDisableModal(false);
+//   setShowOtpModal(false);
+  
+//   // Ensure userDataForLogin is set before calling completeLoginWithoutOtp
+//   if (userDataForLogin) {
+//     completeLoginWithoutOtp();
+//   } else {
+//     setError('Please try logging in again.');
+//   }
+// }, 2000);
+//   } catch (error) {
+//     console.error('Error submitting OTP disable request:', error);
+    
+//     // Log error
+//     await logUserActivity(
+//       userDataForLogin?.userDocId || 'unknown',
+//       otpDisableForm.name,
+//       userDataForLogin?.role || 'unknown',
+//       'OTP_DISABLE_REQUEST',
+//       'FAILED',
+//       `OTP disable request failed: ${error.message}`
+//     );
+
+//     setOtpDisableMessage('Failed to disable 2FA. Please try again.');
+//   } finally {
+//     setIsSubmittingOtpDisable(false);
+//   }
+// };
+
+// Updated function to handle OTP disable request with email validation
 const handleOtpDisableRequest = async () => {
   if (!otpDisableForm.name || !otpDisableForm.email || !otpDisableForm.reason) {
     setOtpDisableMessage('Please fill in all required fields');
@@ -445,6 +521,28 @@ const handleOtpDisableRequest = async () => {
 
   try {
     const db = getFirestore();
+    
+    // First, check if the email exists in the Users collection
+    const usersRef = collection(db, 'Users');
+    const userQuery = query(usersRef, where('email', '==', otpDisableForm.email.toLowerCase()));
+    const userQuerySnapshot = await getDocs(userQuery);
+    
+    if (userQuerySnapshot.empty) {
+      setOtpDisableMessage('Email address not found in the system. Please verify the email address.');
+      setIsSubmittingOtpDisable(false);
+      return;
+    }
+    
+    // Get user data for validation
+    const userData = userQuerySnapshot.docs[0].data();
+    
+    // Optional: Check if the user is active (if isActive field exists)
+    if ('isActive' in userData && !userData.isActive) {
+      setOtpDisableMessage('This account is inactive. Cannot disable 2FA for inactive accounts.');
+      setIsSubmittingOtpDisable(false);
+      return;
+    }
+    
     const disableUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
     
     // Save OTP disable request
@@ -472,24 +570,24 @@ const handleOtpDisableRequest = async () => {
       userDataForLogin?.role || 'unknown',
       'OTP_DISABLED',
       'SUCCESS',
-      `2FA disabled for 24 hours. Reason: ${otpDisableForm.reason}`
+      `2FA disabled for 24 hours. Reason: ${otpDisableForm.reason}. Target email: ${otpDisableForm.email}`
     );
 
     setOtpDisableMessage('2FA has been disabled for 24 hours. You can now login without OTP verification.');
     
     // Close modals and proceed with login
-   // Replace the setTimeout in handleOtpDisableRequest with:
-setTimeout(() => {
-  setShowOtpDisableModal(false);
-  setShowOtpModal(false);
-  
-  // Ensure userDataForLogin is set before calling completeLoginWithoutOtp
-  if (userDataForLogin) {
-    completeLoginWithoutOtp();
-  } else {
-    setError('Please try logging in again.');
-  }
-}, 2000);
+    setTimeout(() => {
+      setShowOtpDisableModal(false);
+      setShowOtpModal(false);
+      
+      // Ensure userDataForLogin is set before calling completeLoginWithoutOtp
+      if (userDataForLogin) {
+        completeLoginWithoutOtp();
+      } else {
+        setError('Please try logging in again.');
+      }
+    }, 2000);
+    
   } catch (error) {
     console.error('Error submitting OTP disable request:', error);
     
@@ -500,7 +598,7 @@ setTimeout(() => {
       userDataForLogin?.role || 'unknown',
       'OTP_DISABLE_REQUEST',
       'FAILED',
-      `OTP disable request failed: ${error.message}`
+      `OTP disable request failed: ${error.message}. Target email: ${otpDisableForm.email}`
     );
 
     setOtpDisableMessage('Failed to disable 2FA. Please try again.');
@@ -508,6 +606,7 @@ setTimeout(() => {
     setIsSubmittingOtpDisable(false);
   }
 };
+
 
 // const completeLoginWithoutOtp = async () => {
 //   try {
@@ -653,127 +752,9 @@ useEffect(() => {
     }
   };
 
-  // Function to check and update failed login attempts
-  // const updateFailedAttempts = async (userEmail, isSuccess = false) => {
-  //   const db = getFirestore();
-  //   try {
-  //     const attemptsRef = collection(db, 'loginAttempts');
-  //     const q = query(attemptsRef, where('email', '==', userEmail.toLowerCase()));
-  //     const querySnapshot = await getDocs(q);
 
-  //     if (querySnapshot.empty && !isSuccess) {
-  //       // Create new record for failed attempt
-  //       await addDoc(attemptsRef, {
-  //         email: userEmail.toLowerCase(),
-  //         failedAttempts: 1,
-  //         lastAttempt: serverTimestamp(),
-  //         lockedUntil: null
-  //       });
-  //       return 1;
-  //     } else if (!querySnapshot.empty) {
-  //       const attemptDoc = querySnapshot.docs[0];
-  //       const attemptData = attemptDoc.data();
 
-  //       if (isSuccess) {
-  //         // Reset failed attempts on successful login
-  //         await updateDoc(doc(db, 'loginAttempts', attemptDoc.id), {
-  //           failedAttempts: 0,
-  //           lastAttempt: serverTimestamp(),
-  //           lockedUntil: null
-  //         });
-  //         return 0;
-  //       } else {
-  //         // Increment failed attempts
-  //         const newFailedAttempts = (attemptData.failedAttempts || 0) + 1;
-  //         const lockoutDuration = newFailedAttempts >= 5 ? 30 * 60 * 1000 : 0; // 30 minutes after 5 attempts
-  //         const lockedUntil = lockoutDuration > 0 ? new Date(Date.now() + lockoutDuration) : null;
 
-  //         await updateDoc(doc(db, 'loginAttempts', attemptDoc.id), {
-  //           failedAttempts: newFailedAttempts,
-  //           lastAttempt: serverTimestamp(),
-  //           lockedUntil: lockedUntil
-  //         });
-
-  //         if (lockedUntil) {
-  //           setIsAccountLocked(true);
-  //           setLockoutEndTime(lockedUntil);
-  //           setLockoutTimer(Math.floor(lockoutDuration / 1000));
-  //         }
-
-  //         return newFailedAttempts;
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error updating failed attempts:', error);
-  //     return 0;
-  //   }
-  // };
-// const updateFailedAttempts = async (userEmail, isSuccess = false) => {
-//   const db = getFirestore();
-//   try {
-//     const attemptsRef = collection(db, 'loginAttempts');
-//     const q = query(attemptsRef, where('email', '==', userEmail.toLowerCase()));
-//     const querySnapshot = await getDocs(q);
-
-//     if (querySnapshot.empty && !isSuccess) {
-//       // Create new record for failed attempt
-//       await addDoc(attemptsRef, {
-//         email: userEmail.toLowerCase(),
-//         failedAttempts: 1,
-//         lastAttempt: serverTimestamp(),
-//         lockedUntil: null
-//       });
-//       return 1;
-//     } else if (!querySnapshot.empty) {
-//       const attemptDoc = querySnapshot.docs[0];
-//       const attemptData = attemptDoc.data();
-
-//       if (isSuccess) {
-//         // Reset failed attempts on successful login
-//         await updateDoc(doc(db, 'loginAttempts', attemptDoc.id), {
-//           failedAttempts: 0,
-//           lastAttempt: serverTimestamp(),
-//           lockedUntil: null
-//         });
-        
-//         // Clear localStorage lockout data
-//         localStorage.removeItem('accountLockout');
-//         localStorage.removeItem('lastAttemptedEmail');
-        
-//         return 0;
-//       } else {
-//         // Increment failed attempts
-//         const newFailedAttempts = (attemptData.failedAttempts || 0) + 1;
-//         const lockoutDuration = newFailedAttempts >= 5 ? 30 * 60 * 1000 : 0; // 30 minutes after 5 attempts
-//         const lockedUntil = lockoutDuration > 0 ? new Date(Date.now() + lockoutDuration) : null;
-
-//         await updateDoc(doc(db, 'loginAttempts', attemptDoc.id), {
-//           failedAttempts: newFailedAttempts,
-//           lastAttempt: serverTimestamp(),
-//           lockedUntil: lockedUntil
-//         });
-
-//         if (lockedUntil) {
-//           setIsAccountLocked(true);
-//           setLockoutEndTime(lockedUntil);
-//           setLockoutTimer(Math.floor(lockoutDuration / 1000));
-          
-//           // Store lockout data in localStorage for persistence
-//           localStorage.setItem('accountLockout', JSON.stringify({
-//             email: userEmail.toLowerCase(),
-//             endTime: lockedUntil.toISOString(),
-//             failedAttempts: newFailedAttempts
-//           }));
-//         }
-
-//         return newFailedAttempts;
-//       }
-//     }
-//   } catch (error) {
-//     console.error('Error updating failed attempts:', error);
-//     return 0;
-//   }
-// };
 const updateFailedAttempts = async (userEmail, isSuccess = false) => {
   const db = getFirestore();
   try {
@@ -1046,9 +1027,14 @@ useEffect(() => {
             );
 
             // Store user info in localStorage
-            localStorage.setItem('userRole', userDataForLogin.role);
-            localStorage.setItem('userName', userDataForLogin.name || email);
-            localStorage.setItem('userId', userDataForLogin.userDocId);
+          localStorage.setItem('userRole', userDataForLogin.role);
+localStorage.setItem('userName', userDataForLogin.name || email);
+localStorage.setItem('userId', userDataForLogin.userDocId);
+localStorage.setItem('userEmail', userDataForLogin.email || email);
+localStorage.setItem('userFirstName', userDataForLogin.firstName || '');
+localStorage.setItem('userLastName', userDataForLogin.lastName || '');
+localStorage.setItem('userGender', userDataForLogin.gender || '');
+localStorage.setItem('userMembership', userDataForLogin.membership || '');
 
             // Log successful login
             await logUserActivity(
@@ -1062,8 +1048,20 @@ useEffect(() => {
 
             setOtpMessage('Login successful! Redirecting...');
             setTimeout(() => {
-              navigate('/dashboard');
-            }, 1500);
+navigate('/dashboard', {
+  state: {
+    userDetails: {
+      email: userDataForLogin.email || email,
+      firstName: userDataForLogin.firstName,
+      lastName: userDataForLogin.lastName,
+      gender: userDataForLogin.gender,
+      role: userDataForLogin.role,
+      membership: userDataForLogin.membership,
+      userId: userDataForLogin.userDocId,
+      name: userDataForLogin.name
+    }
+  }
+});            }, 1500);
           } else {
             otpFound = true;
             setOtpMessage('OTP has expired. Please request a new one.');
@@ -1399,6 +1397,7 @@ const handleLogin = async (e) => {
 //   };
 
   // Handle admin request submission
+ 
   const handleAdminRequest = async () => {
     if (!requestForm.name || !requestForm.email || !requestForm.reason) {
       setRequestMessage('Please fill in all required fields (Name, Email, and Reason)');
@@ -1477,9 +1476,15 @@ const completeLoginWithoutOtpDirect = async (userData, userDocId) => {
     await updateFailedAttempts(email, true);
 
     // Store user info in localStorage
-    localStorage.setItem('userRole', userData.role);
+   localStorage.setItem('userRole', userData.role);
     localStorage.setItem('userName', userData.name || email);
     localStorage.setItem('userId', userDocId);
+    localStorage.setItem('userEmail', userData.email || email);
+    localStorage.setItem('userFirstName', userData.firstName || '');
+    localStorage.setItem('userLastName', userData.lastName || '');
+    localStorage.setItem('userGender', userData.gender || '');
+    localStorage.setItem('userMembership', userData.membership || '');
+
 
     // Log successful login without OTP
     await logUserActivity(
@@ -1492,8 +1497,33 @@ const completeLoginWithoutOtpDirect = async (userData, userDocId) => {
     );
 
     // Navigate to dashboard
-    navigate('/dashboard');
-    
+ navigate('/dashboard', {
+      state: {
+        userDetails: {
+          email: userData.email || email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          gender: userData.gender,
+          role: userData.role,
+          membership: userData.membership,
+          userId: userDocId,
+          name: userData.name
+        }
+      }
+    }); navigate('/dashboard', {
+      state: {
+        userDetails: {
+          email: userData.email || email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          gender: userData.gender,
+          role: userData.role,
+          membership: userData.membership,
+          userId: userDocId,
+          name: userData.name
+        }
+      }
+    });    
   } catch (error) {
     console.error('Error completing login:', error);
     setError('Login completed but there was an error. Please try logging in again.');
@@ -2138,218 +2168,241 @@ const completeLoginWithoutOtpDirect = async (userData, userDocId) => {
       )}
 
       {/* OTP Verification Modal */}
-      {showOtpModal && (
-        <div style={modalStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ marginBottom: '20px', color: '#002366', textAlign: 'center' }}>
-              🔐 Two-Factor Authentication
-            </h3>
-
-            <p style={{ marginBottom: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
-              We've sent a 6-digit verification code to your registered phone number.
-              Please enter it below to complete your login.
-            </p>
-
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{
-                fontSize: '18px',
-                color: '#002366',
-                marginBottom: '10px'
-              }}>
-                Time remaining: {formatTime(otpTimer)}
-              </div>
-            </div>
-
-            <input
-              type="text"
-              placeholder="Enter 6-digit code"
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              style={{
-                ...inputStyle,
-                textAlign: 'center',
-                fontSize: '20px',
-                letterSpacing: '3px',
-              }}
-              maxLength="6"
-              autoComplete="one-time-code"
-            />
-
-            {otpMessage && (
-              <div style={{
-                backgroundColor: otpMessage.includes('successful') ? '#e8f5e8' : '#ffebee',
-                color: otpMessage.includes('successful') ? '#2e7d32' : '#c62828',
-                padding: '12px',
-                borderRadius: '6px',
-                marginBottom: '15px',
-                textAlign: 'center',
-                fontSize: '14px',
-              }}>
-                {otpMessage}
-              </div>
-            )}
-{showOtpDisableModal && (
+     
+         {showOtpModal && (
   <div style={modalStyle}>
     <div style={modalContentStyle}>
-      <button
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '15px',
-          background: 'none',
-          border: 'none',
-          fontSize: '24px',
-          cursor: 'pointer',
-          color: '#666',
-        }}
-        onClick={() => {
-          setShowOtpDisableModal(false);
-          setOtpDisableMessage('');
-          setOtpDisableForm({
-            name: '',
-            email: '',
-            reason: ''
-          });
-        }}
-      >
-        ×
-      </button>
-
-      <h3 style={{ marginBottom: '20px', color: '#dc3545', textAlign: 'center' }}>
-        ⚠️ Disable Two-Factor Authentication
+      <h3 style={{ marginBottom: '20px', color: '#002366', textAlign: 'center' }}>
+        🔐 Two-Factor Authentication
       </h3>
 
       <p style={{ marginBottom: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
-        This will disable 2FA for 24 hours. All users will be notified of this security change.
+        We've sent a 6-digit verification code to your registered phone number.
+        Please enter it below to complete your login.
       </p>
+
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{
+          fontSize: '18px',
+          color: '#002366',
+          marginBottom: '10px'
+        }}>
+          Time remaining: {formatTime(otpTimer)}
+        </div>
+      </div>
 
       <input
         type="text"
-        placeholder="Full Name *"
-        value={otpDisableForm.name}
-        onChange={(e) => handleOtpDisableFormChange('name', e.target.value)}
-        style={inputStyle}
+        placeholder="Enter 6-digit code"
+        value={otpCode}
+        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        style={{
+          ...inputStyle,
+          textAlign: 'center',
+          fontSize: '20px',
+          letterSpacing: '3px',
+        }}
+        maxLength="6"
+        autoComplete="one-time-code"
       />
 
-      <input
-        type="email"
-        placeholder="Email Address *"
-        value={otpDisableForm.email}
-        onChange={(e) => handleOtpDisableFormChange('email', e.target.value.toLowerCase())}
-        style={inputStyle}
-      />
-
-      <select
-        value={otpDisableForm.reason}
-        onChange={(e) => handleOtpDisableFormChange('reason', e.target.value)}
-        style={inputStyle}
-      >
-        <option value="">Select Reason *</option>
-        <option value="PHONE_NOT_ACCESSIBLE">Phone not accessible</option>
-        <option value="SMS_NOT_RECEIVED">SMS not received</option>
-        <option value="PHONE_LOST">Phone lost/stolen</option>
-        <option value="TECHNICAL_ISSUES">Technical issues</option>
-        <option value="EMERGENCY_ACCESS">Emergency access needed</option>
-        <option value="OTHER">Other</option>
-      </select>
-
-      {otpDisableMessage && (
+      {otpMessage && (
         <div style={{
-          backgroundColor: otpDisableMessage.includes('disabled') ? '#e8f5e8' : '#ffebee',
-          color: otpDisableMessage.includes('disabled') ? '#2e7d32' : '#c62828',
+          backgroundColor: otpMessage.includes('successful') ? '#e8f5e8' : '#ffebee',
+          color: otpMessage.includes('successful') ? '#2e7d32' : '#c62828',
           padding: '12px',
           borderRadius: '6px',
           marginBottom: '15px',
           textAlign: 'center',
           fontSize: '14px',
         }}>
-          {otpDisableMessage}
+          {otpMessage}
         </div>
       )}
 
-      <button
-        onClick={handleOtpDisableRequest}
-        style={{
-          ...buttonStyle,
-          backgroundColor: '#dc3545',
-          marginBottom: '10px',
-        }}
-        disabled={isSubmittingOtpDisable}
-      >
-        {isSubmittingOtpDisable ? 'Processing...' : 'Disable 2FA for 24 Hours'}
-      </button>
-
-      <button
-        onClick={() => {
-          setShowOtpDisableModal(false);
-          setOtpDisableMessage('');
-          setOtpDisableForm({
-            name: '',
-            email: '',
-            reason: ''
-          });
-        }}
-        style={{
-          ...buttonStyle,
-          backgroundColor: '#6c757d',
-        }}
-      >
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
+      {showOtpDisableModal && (
+        <div style={modalStyle}>
+          <div style={modalContentStyle}>
             <button
-              onClick={verifyOTP}
               style={{
-                ...buttonStyle,
-                marginBottom: '10px',
+                position: 'absolute',
+                top: '10px',
+                right: '15px',
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#666',
               }}
-              disabled={isVerifyingOtp || otpCode.length !== 6}
+              onClick={() => {
+                setShowOtpDisableModal(false);
+                setOtpDisableMessage('');
+                setOtpDisableForm({
+                  name: '',
+                  email: '',
+                  reason: ''
+                });
+              }}
             >
-              {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
+              ×
             </button>
 
+            <h3 style={{ marginBottom: '20px', color: '#dc3545', textAlign: 'center' }}>
+              ⚠️ Disable Two-Factor Authentication
+            </h3>
+
+            <p style={{ marginBottom: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
+              This will disable 2FA for 24 hours. All users will be notified of this security change.
+            </p>
+
+            <input
+              type="text"
+              placeholder="Full Name *"
+              value={otpDisableForm.name}
+              onChange={(e) => handleOtpDisableFormChange('name', e.target.value)}
+              style={inputStyle}
+            />
+
+            <input
+              type="email"
+              placeholder="Email Address *"
+              value={otpDisableForm.email}
+              onChange={(e) => handleOtpDisableFormChange('email', e.target.value.toLowerCase())}
+              style={inputStyle}
+            />
+
+            <select
+              value={otpDisableForm.reason}
+              onChange={(e) => handleOtpDisableFormChange('reason', e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Select Reason *</option>
+              <option value="PHONE_NOT_ACCESSIBLE">Phone not accessible</option>
+              <option value="SMS_NOT_RECEIVED">SMS not received</option>
+              <option value="PHONE_LOST">Phone lost/stolen</option>
+              <option value="TECHNICAL_ISSUES">Technical issues</option>
+              <option value="EMERGENCY_ACCESS">Emergency access needed</option>
+              <option value="OTHER">Other</option>
+            </select>
+
+            {otpDisableMessage && (
+              <div style={{
+                backgroundColor: otpDisableMessage.includes('disabled') ? '#e8f5e8' : '#ffebee',
+                color: otpDisableMessage.includes('disabled') ? '#2e7d32' : '#c62828',
+                padding: '12px',
+                borderRadius: '6px',
+                marginBottom: '15px',
+                textAlign: 'center',
+                fontSize: '14px',
+              }}>
+                {otpDisableMessage}
+              </div>
+            )}
+
             <button
-              onClick={resendOTP}
+              onClick={handleOtpDisableRequest}
               style={{
                 ...buttonStyle,
-                backgroundColor: canResendOtp ? '#28a745' : '#6c757d',
+                backgroundColor: '#dc3545',
                 marginBottom: '10px',
               }}
-              disabled={!canResendOtp || isSendingOtp}
+              disabled={isSubmittingOtpDisable}
             >
-              {isSendingOtp ? 'Sending...' : canResendOtp ? 'Resend Code' : `Resend in ${formatTime(otpTimer)}`}
+              {isSubmittingOtpDisable ? 'Processing...' : 'Disable 2FA for 24 Hours'}
             </button>
-             <button
-  onClick={() => setShowOtpDisableModal(true)}
-  style={{
-    ...buttonStyle,
-    backgroundColor: '#dc3545',
-    marginBottom: '10px',
-  }}
->
-  🚫 Disable 2FA Temporarily
-</button>
 
             <button
               onClick={() => {
-                setShowOtpModal(false);
-                setOtpCode('');
-                setOtpMessage('');
-                setUserDataForLogin(null);
-                setGeneratedOtpId('');
+                setShowOtpDisableModal(false);
+                setOtpDisableMessage('');
+                setOtpDisableForm({
+                  name: '',
+                  email: '',
+                  reason: ''
+                });
               }}
               style={{
                 ...buttonStyle,
                 backgroundColor: '#6c757d',
               }}
             >
-              Cancel Login
+              Cancel
             </button>
           </div>
         </div>
       )}
+
+      <button
+        onClick={verifyOTP}
+        style={{
+          ...buttonStyle,
+          marginBottom: '10px',
+        }}
+        disabled={isVerifyingOtp || otpCode.length !== 6}
+      >
+        {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
+      </button>
+
+      <button
+        onClick={resendOTP}
+        style={{
+          ...buttonStyle,
+          backgroundColor: canResendOtp ? '#28a745' : '#6c757d',
+          marginBottom: '10px',
+        }}
+        disabled={!canResendOtp || isSendingOtp}
+      >
+        {isSendingOtp ? 'Sending...' : canResendOtp ? 'Resend Code' : `Resend in ${formatTime(otpTimer)}`}
+      </button>
+
+      {/* Only show disable 2FA button after 1 minute (when timer is 240 seconds or less) */}
+      {otpTimer <= 240 && (
+        <button
+          onClick={() => setShowOtpDisableModal(true)}
+          style={{
+            ...buttonStyle,
+            backgroundColor: '#dc3545',
+            marginBottom: '10px',
+          }}
+        >
+        Not getting OTP? Disable 2FA Temporarily
+        </button>
+      )}
+
+      {/* Show message when disable button is not yet available */}
+      {otpTimer > 240 && (
+        <div style={{
+          backgroundColor: '#f8f9fa',
+          color: '#6c757d',
+          padding: '10px',
+          borderRadius: '6px',
+          marginBottom: '10px',
+          textAlign: 'center',
+          fontSize: '12px',
+          border: '1px solid #dee2e6'
+        }}>
+          {/* {formatTime(otpTimer - 240)} */}
+        </div>
+      )}
+
+      <button
+        onClick={() => {
+          setShowOtpModal(false);
+          setOtpCode('');
+          setOtpMessage('');
+          setUserDataForLogin(null);
+          setGeneratedOtpId('');
+        }}
+        style={{
+          ...buttonStyle,
+          backgroundColor: '#6c757d',
+        }}
+      >
+        Cancel Login
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };

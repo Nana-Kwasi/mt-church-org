@@ -3,6 +3,7 @@ import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase
 import { getFirestore } from 'firebase/firestore';
 import app from '../../Component/Config/Config';
 import "../../event.css";
+import { useLocation } from 'react-router-dom';
 
 // SMS Configuration
 const SMS_CONFIG = {
@@ -65,7 +66,11 @@ const Events = () => {
   const [groupType, setGroupType] = useState(''); // 'organization' or 'class'
 const [selectedGroups, setSelectedGroups] = useState([]);
 const [groupMembers, setGroupMembers] = useState({});
+ 
 
+  const location = useLocation();
+  const userDetails = location.state?.userDetails;
+  
   // Loading states for form submissions
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const [isSubmittingAnnouncement, setIsSubmittingAnnouncement] = useState(false);
@@ -431,87 +436,184 @@ useEffect(() => {
     fetchMembersByGroups();
   }
 }, [isSMSModalOpen, smsOption]);
-  const handleAnnouncementSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmittingAnnouncement(true);
+
+
+
+  // const handleAnnouncementSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setIsSubmittingAnnouncement(true);
     
-    try {
-      const announcementData = {
-        ...announcementForm,
-        expiryDate: announcementForm.expiryDate ? new Date(announcementForm.expiryDate) : null,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+  //   try {
+  //     const announcementData = {
+  //       ...announcementForm,
+  //       expiryDate: announcementForm.expiryDate ? new Date(announcementForm.expiryDate) : null,
+        
+  //       createdAt: new Date(),
+  //       updatedAt: new Date()
+  //     };
 
-      let savedAnnouncement;
-      if (editingAnnouncement) {
-        await updateDoc(doc(db, 'Announcements', editingAnnouncement.id), {
-          ...announcementData,
-          updatedAt: new Date()
-        });
-        savedAnnouncement = { ...editingAnnouncement, ...announcementData };
-        alert('Announcement updated successfully!');
-      } else {
-        const docRef = await addDoc(collection(db, 'Announcements'), announcementData);
-        savedAnnouncement = { id: docRef.id, ...announcementData };
-        alert('Announcement created successfully!');
-      }
+  //     let savedAnnouncement;
+  //     if (editingAnnouncement) {
+  //       await updateDoc(doc(db, 'Announcements', editingAnnouncement.id), {
+  //         ...announcementData,
+  //         updatedAt: new Date()
+  //       });
+  //       savedAnnouncement = { ...editingAnnouncement, ...announcementData };
+  //       alert('Announcement updated successfully!');
+  //     } else {
+  //       const docRef = await addDoc(collection(db, 'Announcements'), announcementData);
+  //       savedAnnouncement = { id: docRef.id, ...announcementData };
+  //       alert('Announcement created successfully!');
+  //     }
 
-      setIsAnnouncementModalOpen(false);
-      setEditingAnnouncement(null);
-      resetAnnouncementForm();
-      fetchAnnouncements();
+  //     setIsAnnouncementModalOpen(false);
+  //     setEditingAnnouncement(null);
+  //     resetAnnouncementForm();
+  //     fetchAnnouncements();
       
-      // Show SMS modal for new announcements
-      if (!editingAnnouncement) {
-        setCurrentAnnouncement(savedAnnouncement);
-        setIsSMSModalOpen(true);
-      }
-    } catch (error) {
-      console.error('Error saving announcement:', error);
-      alert('Error saving announcement. Please try again.');
-    } finally {
-      setIsSubmittingAnnouncement(false);
-    }
-  };
+  //     // Show SMS modal for new announcements
+  //     if (!editingAnnouncement) {
+  //       setCurrentAnnouncement(savedAnnouncement);
+  //       setIsSMSModalOpen(true);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving announcement:', error);
+  //     alert('Error saving announcement. Please try again.');
+  //   } finally {
+  //     setIsSubmittingAnnouncement(false);
+  //   }
+  // };
 
-  const handleEventSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmittingEvent(true);
-    
-    try {
-      const eventData = {
-        ...eventForm,
-        date: new Date(eventForm.date + 'T' + eventForm.startTime),
-        startTime: eventForm.startTime,
-        endTime: eventForm.endTime,
-        maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : null,
-        createdAt: new Date(),
+
+  const handleAnnouncementSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmittingAnnouncement(true);
+  
+  try {
+    const announcementData = {
+      ...announcementForm,
+      expiryDate: announcementForm.expiryDate ? new Date(announcementForm.expiryDate) : null,
+      createdBy: userDetails ? {
+        id: userDetails.id,
+        name: `${userDetails.firstName} ${userDetails.lastName}`,
+        email: userDetails.email
+      } : null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    let savedAnnouncement;
+    if (editingAnnouncement) {
+      await updateDoc(doc(db, 'Announcements', editingAnnouncement.id), {
+        ...announcementData,
         updatedAt: new Date()
-      };
-
-      if (editingEvent) {
-        await updateDoc(doc(db, 'Events', editingEvent.id), {
-          ...eventData,
-          updatedAt: new Date()
-        });
-        alert('Event updated successfully!');
-      } else {
-        await addDoc(collection(db, 'Events'), eventData);
-        alert('Event created successfully!');
-      }
-
-      setIsEventModalOpen(false);
-      setEditingEvent(null);
-      resetEventForm();
-      fetchEvents();
-    } catch (error) {
-      console.error('Error saving event:', error);
-      alert('Error saving event. Please try again.');
-    } finally {
-      setIsSubmittingEvent(false);
+      });
+      savedAnnouncement = { ...editingAnnouncement, ...announcementData };
+      alert('Announcement updated successfully!');
+    } else {
+      const docRef = await addDoc(collection(db, 'Announcements'), announcementData);
+      savedAnnouncement = { id: docRef.id, ...announcementData };
+      alert('Announcement created successfully!');
     }
-  };
+
+    setIsAnnouncementModalOpen(false);
+    setEditingAnnouncement(null);
+    resetAnnouncementForm();
+    fetchAnnouncements();
+    
+    // Show SMS modal for new announcements
+    if (!editingAnnouncement) {
+      setCurrentAnnouncement(savedAnnouncement);
+      setIsSMSModalOpen(true);
+    }
+  } catch (error) {
+    console.error('Error saving announcement:', error);
+    alert('Error saving announcement. Please try again.');
+  } finally {
+    setIsSubmittingAnnouncement(false);
+  }
+};
+  // const handleEventSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setIsSubmittingEvent(true);
+    
+  //   try {
+  //     const eventData = {
+  //       ...eventForm,
+  //       date: new Date(eventForm.date + 'T' + eventForm.startTime),
+  //       startTime: eventForm.startTime,
+  //       endTime: eventForm.endTime,
+  //       maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : null,
+  //       createdAt: new Date(),
+  //       updatedAt: new Date()
+  //     };
+
+  //     if (editingEvent) {
+  //       await updateDoc(doc(db, 'Events', editingEvent.id), {
+  //         ...eventData,
+  //         updatedAt: new Date()
+  //       });
+  //       alert('Event updated successfully!');
+  //     } else {
+  //       await addDoc(collection(db, 'Events'), eventData);
+  //       alert('Event created successfully!');
+  //     }
+
+  //     setIsEventModalOpen(false);
+  //     setEditingEvent(null);
+  //     resetEventForm();
+  //     fetchEvents();
+  //   } catch (error) {
+  //     console.error('Error saving event:', error);
+  //     alert('Error saving event. Please try again.');
+  //   } finally {
+  //     setIsSubmittingEvent(false);
+  //   }
+  // };
+const handleEventSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmittingEvent(true);
+  
+  try {
+    const eventData = {
+      ...eventForm,
+      date: new Date(eventForm.date + 'T' + eventForm.startTime),
+      startTime: eventForm.startTime,
+      endTime: eventForm.endTime,
+      maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : null,
+      createdBy: userDetails ? {
+        id: userDetails.id,
+        name: `${userDetails.firstName} ${userDetails.lastName}`,
+        email: userDetails.email
+      } : null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (editingEvent) {
+      await updateDoc(doc(db, 'Events', editingEvent.id), {
+        ...eventData,
+        updatedAt: new Date()
+      });
+      alert('Event updated successfully!');
+    } else {
+      await addDoc(collection(db, 'Events'), eventData);
+      alert('Event created successfully!');
+    }
+
+    setIsEventModalOpen(false);
+    setEditingEvent(null);
+    resetEventForm();
+    fetchEvents();
+  } catch (error) {
+    console.error('Error saving event:', error);
+    alert('Error saving event. Please try again.');
+  } finally {
+    setIsSubmittingEvent(false);
+  }
+};
+
+
 
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
@@ -1108,7 +1210,7 @@ useEffect(() => {
                   {isSubmittingAnnouncement && <Spinner />}
                   {isSubmittingAnnouncement 
                     ? (editingAnnouncement ? 'Updating Announcement...' : 'Creating Announcement...') 
-                    : (editingAnnouncement ? 'Update Announcement' : 'Create Announcement')
+                    : (editingAnnouncement ? 'Update Announcement' : 'Publish Announcement')
                   }
                 </button>
                 <button 

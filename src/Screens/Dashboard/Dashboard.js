@@ -3,7 +3,7 @@ import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import "../../Dashboard.css";
-
+import { useLocation } from 'react-router-dom';
 const Dashboard = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [membersData, setMembersData] = useState([]);
@@ -14,6 +14,11 @@ const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentScripture, setCurrentScripture] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get user data from navigation state or context
+  const userDetails = location.state?.userDetails 
+
 
   const [summaryStats, setSummaryStats] = useState({
     totalMembers: 0,
@@ -427,7 +432,7 @@ const Dashboard = () => {
       {/* Header Section with Greeting, Clock and Scripture */}
       <div className="dashboard-header">
         <div className="greeting-section">
-          <h1 className="time-greeting">{getTimeBasedGreeting()}</h1>
+          <h1 className="time-greeting">{getTimeBasedGreeting()} {userDetails?.firstName} {userDetails?.lastName}</h1>
           <p className="current-date">{currentTime.toLocaleDateString('en-GB', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -453,9 +458,10 @@ const Dashboard = () => {
             <p className="scripture-reference">- {bibleVerses[currentScripture].reference}</p>
           </div>
         </div>
+        
       </div>
 
-      <h2>Dashboard Overview</h2>
+      {/* <h2>Dashboard Overview</h2> */}
       
       {/* Icon Stats Section */}
       <div className="icon-stats">
@@ -673,7 +679,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
 
 
 //worked 
