@@ -102,4 +102,30 @@
   font-size: 16px;
 }
 
+.sidebar-icon {
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.sidebar-label {
+  font-size: 16px;
+}
+@media (max-width: 768px) {
+  .sidebar-link {
+    padding: 16px;
+  }
+
+  .sidebar-icon {
+    margin-right: 16px;
+  }
+
+  .sidebar-label {
+    font-size: 18px;
+  }
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+}
+
 /* Add additional form or button styles as needed */

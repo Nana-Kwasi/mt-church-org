@@ -83,7 +83,6 @@ import BackgroundAudio from './Component/BackgroundAudio/BackgroundAudio';
 import AudioControls from './Component/AudioControls/AudioControls';
 import "../src/global.css";
 import "../src/responsive.css";
-
 const Layout = ({ children }) => {
   const location = useLocation();
 
@@ -119,12 +118,14 @@ const App = () => {
           <Route path="/donation" element={<Donation />} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/assign-member" element={<AssignMember />} />
-          <Route path="/events" element={<Events />} />
+          <Route path="/Events" element={<Events />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/search" element={<Search />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/users" element={<Users />} />
           <Route path="/member-details/:memberId" element={<MemberDetails />} />
+
+
         </Routes>
       </Layout>
     </Router>
